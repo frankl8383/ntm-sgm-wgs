@@ -1,0 +1,46 @@
+read_qc:
+  min_total_reads: 500000
+  min_estimated_depth: 20
+  preferred_estimated_depth: 30
+  min_q30_rate: 0.75
+
+taxonomy_reads:
+  min_mycobacterium_fraction_for_ntm_candidate: 0.70
+  preferred_mycobacterium_fraction: 0.85
+  min_top_species_fraction_for_single_species: 0.60
+  mixed_species_warning_fraction: 0.10
+
+assembly_qc:
+  min_completeness: 90
+  max_contamination_preferred: 5
+  max_contamination_warning: 10
+  max_contigs_preferred: 500
+  min_n50_preferred: 20000
+  mycobacterium_gc_min: 60
+  mycobacterium_gc_max: 72
+
+species_calling:
+  ani_species_threshold: 95.0
+  ani_species_preferred_threshold: 96.0
+  ani_subspecies_exploratory_threshold: 98.0
+  min_fastani_alignment_fraction_warning: 0.50
+  require_two_independent_evidence_sources: true
+
+novel_species_candidate:
+  max_ani_to_type_strain: 95.0
+  max_dddh_to_type_strain: 70.0
+  require_gunc_pass: true
+  require_checkm2_completeness_min: 90
+  require_checkm2_contamination_max: 5
+
+public_data:
+  max_genomes_per_species_tier2: 300
+  min_genomes_per_major_species_tier2: 50
+  dereplication_ani_threshold: 99.9
+
+ml:
+  enable: false
+  train_on_public_only: true
+  external_validate_on_local_only: true
+  group_cv_by_species: true
+  min_samples_per_class: 50

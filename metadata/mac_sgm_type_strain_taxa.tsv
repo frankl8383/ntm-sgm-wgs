@@ -1,0 +1,21 @@
+taxon_name	panel_group	rationale
+Mycobacterium avium	MAC_observed	Observed local MAC species; core public-context species.
+Mycobacterium intracellulare	MAC_observed	Observed local MAC species; species-granularity conflict with M. paraintracellulare.
+Mycobacterium paraintracellulare	MAC_observed	Observed local MAC species; public sampling sparse and requires type-strain anchoring.
+Mycobacterium colombiense	MAC_observed	Observed local MAC species; rare/less represented in local setting.
+Mycobacterium chimaera	MAC_near_neighbor	MAC near-neighbor frequently resolved by WGS rather than single marker genes.
+Mycobacterium yongonense	MAC_near_neighbor	MAC/M. intracellulare-related taxon relevant to granularity checks.
+Mycobacterium marseillense	MAC_near_neighbor	MAC-related taxon for broader type-strain ANI context.
+Mycobacterium timonense	MAC_near_neighbor	MAC-related taxon for broader type-strain ANI context.
+Mycobacterium arosiense	MAC_near_neighbor	MAC-related taxon for broader type-strain ANI context.
+Mycobacterium vulneris	MAC_near_neighbor	MAC-related taxon for broader type-strain ANI context.
+Mycobacterium bouchedurhonense	MAC_near_neighbor	MAC-related taxon for broader type-strain ANI context.
+Mycobacterium mantenii	MAC_near_neighbor	MAC-related taxon for broader type-strain ANI context.
+Mycobacterium indicus pranii	MAC_near_neighbor	MAC-related taxon sometimes discussed near the avium-intracellulare complex.
+Mycobacterium kansasii	SGM_outgroup	Common slowly growing NTM outgroup for non-MAC exclusion.
+Mycobacterium gordonae	SGM_outgroup	Common slowly growing NTM outgroup for non-MAC exclusion.
+Mycobacterium simiae	SGM_outgroup	Common slowly growing NTM outgroup for non-MAC exclusion.
+Mycobacterium xenopi	SGM_outgroup	Common slowly growing NTM outgroup for non-MAC exclusion.
+Mycobacterium malmoense	SGM_outgroup	Common slowly growing NTM outgroup for non-MAC exclusion.
+Mycobacterium marinum	SGM_outgroup	Slowly growing mycobacterium outgroup for broad SGM context.
+Mycobacterium ulcerans	SGM_outgroup	Slowly growing mycobacterium outgroup for broad SGM context.

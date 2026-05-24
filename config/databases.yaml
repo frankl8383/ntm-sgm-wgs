@@ -1,0 +1,38 @@
+kraken2:
+  database: data/databases/kraken2/k2_standard_16_GB_20260226
+  version: k2_standard_16_GB_20260226
+  source_url: https://genome-idx.s3.amazonaws.com/kraken/k2_standard_16_GB_20260226.tar.gz
+  notes: Kraken2 Standard-16 prebuilt database downloaded 2026-05-02. Includes archaea, bacteria, viral, plasmid, human, and UniVec_Core libraries.
+
+bracken:
+  database: data/databases/kraken2/k2_standard_16_GB_20260226
+  version: k2_standard_16_GB_20260226
+  read_length_available: [50, 75, 100, 150, 200, 250, 300]
+  notes: Bracken k-mer distribution files are bundled in the downloaded Kraken2 database; 150 bp reads use database150mers.kmer_distrib.
+
+checkm2:
+  database: data/databases/checkm2/CheckM2_database/uniref100.KO.1.dmnd
+  version: CheckM2_database downloaded 2026-05-02
+  source_url: https://zenodo.org/api/records/14897628/files/checkm2_database.tar.gz/content
+  notes: Downloaded with checkm2 database --download --path data/databases/checkm2 --no_write_json_db.
+
+quast:
+  executable: .conda_envs/quast_osx64/bin/quast.py
+  version: 5.3.0
+  source: bioconda osx-64 package running under Rosetta on Apple Silicon
+  notes: Native osx-arm64 bioconda did not provide QUAST 5.3.0; osx-64 build was installed with mamba create --platform osx-64.
+
+gunc:
+  database: data/databases/gunc/gunc_db_progenomes2.1.dmnd
+  version: progenomes_2.1
+  source_url: https://black.embl.de/~fullam/gunc/gunc_db_progenomes2.1.dmnd.gz
+  notes: Configure this path to a local GUNC ProGenomes 2.1 database before running GUNC rules.
+
+ntm_profiler:
+  database: null
+  version: null
+  notes: Configure in WP3 species calling implementation.
+
+fastani:
+  tier0_reference_manifest: metadata/public_genome_metadata.tsv
+  notes: Configure after Tier 0 public genome download.

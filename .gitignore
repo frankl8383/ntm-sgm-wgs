@@ -1,0 +1,16 @@
+.DS_Store
+.snakemake/
+.conda_envs/
+data/
+results/
+exports/
+outputs/
+tmp/
+*.zip
+*.tar.gz
+*.xlsx
+*.xls
+*.docx
+*.pdf
+*.html
+*.log

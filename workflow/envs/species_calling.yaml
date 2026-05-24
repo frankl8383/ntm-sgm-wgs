@@ -1,0 +1,11 @@
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - fastani=1.34
+  - ncbi-datasets-cli=18.9.0
+  - blast=2.16.0
+  - ntm-profiler=0.8.1
+  - biopython
+  - pandas

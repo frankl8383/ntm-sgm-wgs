@@ -1,0 +1,15 @@
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - mash=2.3
+  - mashtree=1.4.6
+  - ska2=0.5.1
+  - snp-sites=2.5.1
+  - iqtree
+  - mafft
+  - fasttree
+  - biopython
+  - pandas
+  - matplotlib

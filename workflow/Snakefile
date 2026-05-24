@@ -1,0 +1,46 @@
+import csv
+from pathlib import Path
+
+
+PROJECT_ROOT = Path(config.get("project_root", "."))
+SAMPLESHEET = config["paths"]["samplesheet"]
+
+
+def load_samplesheet(path):
+    sheet = PROJECT_ROOT / path
+    if not sheet.exists():
+        return {}, {}, []
+    with sheet.open("r", encoding="utf-8", newline="") as handle:
+        reader = csv.DictReader(handle, delimiter="\t")
+        rows = [row for row in reader if row.get("sample_id")]
+    r1 = {row["sample_id"]: row["fastq_r1"] for row in rows}
+    r2 = {row["sample_id"]: row["fastq_r2"] for row in rows}
+    samples = list(r1)
+    return r1, r2, samples
+
+
+FASTQ_R1, FASTQ_R2, SAMPLES = load_samplesheet(SAMPLESHEET)
+READS = ["R1", "R2"]
+
+
+rule all:
+    input:
+        config.get("targets", ["results/tables/preflight_samplesheet_check.tsv"])
+
+
+include: "rules/00_preflight.smk"
+include: "rules/01_read_qc.smk"
+
+# Reserved interfaces for later work packages.
+include: "rules/02_taxonomy_reads.smk"
+include: "rules/03_assembly.smk"
+include: "rules/04_assembly_qc.smk"
+include: "rules/05_species_calling.smk"
+include: "rules/06_public_data.smk"
+include: "rules/07_ani_public_context.smk"
+include: "rules/08_phylogeny.smk"
+include: "rules/09_annotation_pangenome.smk"
+include: "rules/10_amr_virulence_mobilome.smk"
+include: "rules/11_ml_optional.smk"
+include: "rules/12_taxonomy_branch.smk"
+include: "rules/13_figures_tables.smk"

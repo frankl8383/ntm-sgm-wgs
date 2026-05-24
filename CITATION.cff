@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "If you use this workflow or scripts, please cite the associated study and this code release."
+title: "Contamination-aware genomic reassessment of presumed slowly growing nontuberculous mycobacterial isolates"
+authors:
+  - family-names: "Liu"
+    given-names: "Zihao"
+  - family-names: "Li"
+    given-names: "Bing"
+type: software
+version: "v1.0.4-code-only"
+date-released: "2026-05-24"
+abstract: "Minimal analysis workflow and scripts for contamination-aware WGS reassessment of presumed SGM-NTM isolates and public MAC/SGM contextualization."
+keywords:
+  - "nontuberculous mycobacteria"
+  - "Mycobacterium avium complex"
+  - "whole-genome sequencing"
+  - "contamination-aware analysis"
+  - "comparative genomics"

@@ -1,0 +1,101 @@
+project_name: contamination-aware_NTM_SGM_WGS_public_context
+project_root: .
+
+paths:
+  samplesheet: metadata/samplesheet.tsv
+  samplesheet_template: metadata/samplesheet.template.tsv
+  raw_fastq_dir: data/raw_fastq
+  clean_fastq_dir: data/clean_fastq
+  results_dir: results
+  logs_dir: results/logs
+  tables_dir: results/tables
+  raw_bgi_archive_dir: data/vendor_archives/raw/BGI_result/Separate
+  denovo_bgi_archive_dir: data/vendor_archives/denovo/BGI_result/Separate
+  denovo_bgi_result_dir: data/vendor_archives/denovo/BGI_result/Separate
+
+metadata_defaults:
+  initial_species_label: unknown
+  initial_growth_type: presumed_SGM
+  collection_date: NA
+  isolation_source: NA
+  patient_id_anonymized: NA
+  sequencing_platform: DNBSEQ
+  read_length: 150
+  notes: imported_from_BGI_clean_fastq_archives
+
+targets:
+  - results/tables/preflight_samplesheet_check.tsv
+  - results/tables/read_assembly_initial_genome_level_judgement.tsv
+
+fastp:
+  qualified_quality_phred: 20
+  length_required: 50
+  detect_adapter_for_pe: true
+  extra_args: ""
+
+fastqc:
+  extra_args: ""
+
+multiqc:
+  title: NTM SGM WGS read QC
+
+kraken2:
+  database: data/databases/kraken2/k2_standard_16_GB_20260226
+  confidence: 0.05
+  minimum_base_quality: 0
+  memory_mapping: true
+  save_per_read_output: false
+  extra_args: ""
+
+bracken:
+  database: data/databases/kraken2/k2_standard_16_GB_20260226
+  read_length: 150
+  threshold: 10
+  species_level: S
+  genus_level: G
+  extra_args: ""
+
+checkm2:
+  database: data/databases/checkm2/CheckM2_database/uniref100.KO.1.dmnd
+  lowmem: true
+  extra_args: ""
+
+quast:
+  executable: .conda_envs/quast_osx64/bin/quast.py
+  min_contig_length: 500
+  extra_args: "--no-icarus"
+
+gunc:
+  database: data/databases/gunc/gunc_db_progenomes2.1.dmnd
+  database_name: progenomes_2.1
+  extra_args: "--detailed_output --contig_taxonomy_output"
+
+assembly:
+  assembler: spades
+  estimated_genome_size: 6mb
+  subsample_coverage: 120
+  subsample_seed: 42
+  spades_memory_gb: 12
+  min_contig_length: 500
+  keep_spades_workdir: false
+  extra_args: "--isolate --only-assembler"
+
+taxonomy_plot:
+  top_n_species: 15
+  min_fraction_to_label: 0.01
+  width: 12
+  height: 6
+
+resources:
+  fastp_threads: 4
+  fastqc_threads: 1
+  multiqc_threads: 1
+  kraken2_threads: 8
+  bracken_threads: 1
+  assembly_threads: 4
+  quast_threads: 4
+  checkm2_threads: 6
+  gunc_threads: 6
+
+software:
+  conda_frontend: conda
