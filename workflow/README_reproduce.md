@@ -1,17 +1,14 @@
-# Reproducing the analysis workflow
+# Workflow
 
-This project contains a Snakemake-based analysis and supporting scripts for contamination-aware WGS reassessment of presumed SGM-NTM isolates.
+Snakemake rules cover the core read QC, read-level taxonomy, assembly and genome-QC steps. Later ANI, species-evidence, AMR/stress and figure steps are provided as standalone scripts.
 
 ## Inputs
 
-1. `metadata/samplesheet.tsv`: local FASTQ manifest created from `metadata/samplesheet.template.tsv`.
-2. `config/config.yaml` and `config/qc_thresholds.yaml`: paths and thresholds.
-3. Local database installations matching `config/databases.yaml`.
-4. Public genome metadata and FASTA files downloaded locally by the user.
+1. `metadata/samplesheet.tsv`
+2. `config/config.yaml`
+3. local databases listed in `config/databases.yaml`
 
-## Minimal command sequence
-
-The project was built incrementally. For a fresh reproduction on a machine with the databases available, start with:
+## Basic commands
 
 ```bash
 snakemake --use-conda --cores 8 --dry-run
@@ -29,7 +26,3 @@ python scripts/plot_figures_4_5_public_context.py --help
 python scripts/review_ntm_resistance_loci.py --help
 python scripts/summarize_genomad_results.py --help
 ```
-
-## Interpretation Constraints
-
-Public-context phylogenies should not be interpreted as transmission analyses. Genome-only AMR/stress feature review is not clinical resistance prediction. Conservative mobile-element-associated feature review from short-read draft assemblies does not prove complete plasmids, horizontal transfer or epidemiological linkage.

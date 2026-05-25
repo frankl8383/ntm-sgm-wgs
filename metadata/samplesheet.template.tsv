@@ -1,2 +1,2 @@
-sample_id	fastq_r1	fastq_r2	initial_species_label	initial_growth_type	collection_date	isolation_source	patient_id_anonymized	sequencing_platform	read_length	notes
-S001	data/raw_fastq/S001_R1.fastq.gz	data/raw_fastq/S001_R2.fastq.gz	unknown	presumed_SGM	NA	NA	NA	Illumina	150	NA
+sample_id	fastq_r1	fastq_r2	initial_species_label	initial_growth_type	collection_date	isolation_source	sequencing_platform	read_length	notes
+S001	data/raw_fastq/S001_R1.fastq.gz	data/raw_fastq/S001_R2.fastq.gz	unknown	presumed_SGM	NA	NA	Illumina	150	NA

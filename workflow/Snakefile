@@ -30,17 +30,6 @@ rule all:
 
 include: "rules/00_preflight.smk"
 include: "rules/01_read_qc.smk"
-
-# Reserved interfaces for later work packages.
 include: "rules/02_taxonomy_reads.smk"
 include: "rules/03_assembly.smk"
 include: "rules/04_assembly_qc.smk"
-include: "rules/05_species_calling.smk"
-include: "rules/06_public_data.smk"
-include: "rules/07_ani_public_context.smk"
-include: "rules/08_phylogeny.smk"
-include: "rules/09_annotation_pangenome.smk"
-include: "rules/10_amr_virulence_mobilome.smk"
-include: "rules/11_ml_optional.smk"
-include: "rules/12_taxonomy_branch.smk"
-include: "rules/13_figures_tables.smk"

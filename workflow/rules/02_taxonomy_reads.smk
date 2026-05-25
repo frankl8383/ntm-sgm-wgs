@@ -197,34 +197,6 @@ rule collect_read_qc_taxonomy:
         """
 
 
-rule plot_bracken_species_stacked_barplot:
-    input:
-        species_long="results/tables/bracken_species_abundance_long.tsv",
-        summary="results/tables/read_qc_taxonomy_summary.tsv",
-    output:
-        pdf="results/figures/bracken_species_stacked_barplot.pdf",
-        png="results/figures/bracken_species_stacked_barplot.png",
-    log:
-        "results/logs/plot_bracken_species_stacked_barplot.log",
-    params:
-        top_n=config["taxonomy_plot"].get("top_n_species", 15),
-        width=config["taxonomy_plot"].get("width", 12),
-        height=config["taxonomy_plot"].get("height", 6),
-    conda:
-        "../envs/r_visualization.yaml"
-    shell:
-        """
-        Rscript scripts/plot_taxonomy_barplot.R \
-          --input {input.species_long} \
-          --summary {input.summary} \
-          --pdf {output.pdf} \
-          --png {output.png} \
-          --top-n {params.top_n} \
-          --width {params.width} \
-          --height {params.height} > {log} 2>&1
-        """
-
-
 rule classify_read_level_taxonomy:
     input:
         summary="results/tables/read_qc_taxonomy_summary.tsv",

@@ -18,7 +18,6 @@ REQUIRED_COLUMNS = [
     "initial_growth_type",
     "collection_date",
     "isolation_source",
-    "patient_id_anonymized",
     "sequencing_platform",
     "read_length",
     "notes",

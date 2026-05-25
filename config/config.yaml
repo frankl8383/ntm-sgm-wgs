@@ -5,23 +5,18 @@ paths:
   samplesheet: metadata/samplesheet.tsv
   samplesheet_template: metadata/samplesheet.template.tsv
   raw_fastq_dir: data/raw_fastq
-  clean_fastq_dir: data/clean_fastq
   results_dir: results
   logs_dir: results/logs
   tables_dir: results/tables
-  raw_bgi_archive_dir: data/vendor_archives/raw/BGI_result/Separate
-  denovo_bgi_archive_dir: data/vendor_archives/denovo/BGI_result/Separate
-  denovo_bgi_result_dir: data/vendor_archives/denovo/BGI_result/Separate
 
 metadata_defaults:
   initial_species_label: unknown
   initial_growth_type: presumed_SGM
   collection_date: NA
   isolation_source: NA
-  patient_id_anonymized: NA
   sequencing_platform: DNBSEQ
   read_length: 150
-  notes: imported_from_BGI_clean_fastq_archives
+  notes: NA
 
 targets:
   - results/tables/preflight_samplesheet_check.tsv
@@ -79,12 +74,6 @@ assembly:
   min_contig_length: 500
   keep_spades_workdir: false
   extra_args: "--isolate --only-assembler"
-
-taxonomy_plot:
-  top_n_species: 15
-  min_fraction_to_label: 0.01
-  width: 12
-  height: 6
 
 resources:
   fastp_threads: 4
