@@ -268,7 +268,7 @@ def plot_tree_and_blocks(
 
 def plot_prevalence(ax: plt.Axes, validation: pd.DataFrame) -> pd.DataFrame:
     panel_label(ax, "b", x=-0.12)
-    ax.set_title("Full-atlas prevalence and local replication", loc="left", pad=8)
+    ax.set_title("Full-atlas prevalence and local directional concordance", loc="left", pad=8)
     data = validation[validation.block_id.isin(CORE_BLOCKS)].copy()
     data["order"] = data.block_id.map({block: index for index, block in enumerate(CORE_BLOCKS)})
     data = data.sort_values("order")

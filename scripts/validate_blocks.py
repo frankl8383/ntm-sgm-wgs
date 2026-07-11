@@ -78,6 +78,7 @@ def main() -> None:
     parser.add_argument("--search-tsv", required=True)
     parser.add_argument("--sequence-metadata", required=True)
     parser.add_argument("--panel-manifest", required=True)
+    parser.add_argument("--discovery-panel-manifest")
     parser.add_argument("--atlas-metadata", required=True)
     parser.add_argument("--output-dir", required=True)
     args = parser.parse_args()
@@ -205,6 +206,80 @@ def main() -> None:
     per_genome.to_csv(
         output_dir / "curated_blocks_full_atlas_per_genome.tsv", sep="\t", index=False
     )
+
+    if args.discovery_panel_manifest:
+        discovery_panel = pd.read_csv(
+            args.discovery_panel_manifest, sep="\t", dtype=str
+        ).fillna("")
+        discovery_ids = set(
+            discovery_panel[
+                discovery_panel.source.eq("public")
+                & discovery_panel.accessory_lineage.isin([TMI, MP])
+            ].tree_id
+        )
+        evaluation_panel = panel[
+            panel.source.eq("public")
+            & panel.accessory_lineage.isin([TMI, MP])
+            & ~panel.tree_id.isin(discovery_ids)
+        ].copy()
+        evaluation_panel[["tree_id", "accessory_lineage", "bioproject"]].to_csv(
+            output_dir / "non_discovery_public_membership.tsv", sep="\t", index=False
+        )
+        evaluation_tmi = set(
+            evaluation_panel[evaluation_panel.accessory_lineage.eq(TMI)].tree_id
+        )
+        evaluation_mp = set(
+            evaluation_panel[evaluation_panel.accessory_lineage.eq(MP)].tree_id
+        )
+        evaluation_rows: list[dict[str, object]] = []
+        evaluation_p_values: list[float] = []
+        for block in blocks.itertuples(index=False):
+            block_id = str(block.block_id)
+            present = block_presence[block_id]
+            tmi_present = len(present & evaluation_tmi)
+            mp_present = len(present & evaluation_mp)
+            if str(block.association_direction) == "TMI_enriched":
+                table = [
+                    [tmi_present, len(evaluation_tmi) - tmi_present],
+                    [mp_present, len(evaluation_mp) - mp_present],
+                ]
+                expected_gap = (
+                    tmi_present / len(evaluation_tmi)
+                    - mp_present / len(evaluation_mp)
+                )
+            else:
+                table = [
+                    [mp_present, len(evaluation_mp) - mp_present],
+                    [tmi_present, len(evaluation_tmi) - tmi_present],
+                ]
+                expected_gap = (
+                    mp_present / len(evaluation_mp)
+                    - tmi_present / len(evaluation_tmi)
+                )
+            odds_ratio, p_value = fisher_exact(table)
+            evaluation_p_values.append(float(p_value))
+            evaluation_rows.append(
+                {
+                    "block_id": block_id,
+                    "association_direction": block.association_direction,
+                    "tmi_present": tmi_present,
+                    "tmi_total": len(evaluation_tmi),
+                    "mp_mip_present": mp_present,
+                    "mp_mip_total": len(evaluation_mp),
+                    "expected_direction_prevalence_gap": expected_gap,
+                    "expected_direction_odds_ratio": float(odds_ratio),
+                    "fisher_p_value": float(p_value),
+                }
+            )
+        evaluation = pd.DataFrame(evaluation_rows)
+        evaluation["fisher_fdr"] = benjamini_hochberg(
+            np.asarray(evaluation_p_values)
+        )
+        evaluation.to_csv(
+            output_dir / "non_discovery_public_block_statistics.tsv",
+            sep="\t",
+            index=False,
+        )
 
     summary_rows: list[dict[str, object]] = []
     p_values: list[float] = []

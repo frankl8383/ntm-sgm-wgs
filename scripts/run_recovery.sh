@@ -21,6 +21,7 @@ strict_r1="$outdir/strict/${sample}.R1.fastq.gz"
 strict_r2="$outdir/strict/${sample}.R2.fastq.gz"
 bowtie2 --very-sensitive --no-mixed --no-discordant --no-unal -X 1000 \
   -p "$threads" -x "$bait_index" -1 "$r1" -2 "$r2" \
+  2> "$outdir/strict/${sample}.bowtie2.log" \
   | samtools view -u -f 2 -F 2304 - \
   | samtools collate -u -O - \
   | samtools fastq -n -1 "$strict_r1" -2 "$strict_r2" -0 /dev/null -s /dev/null -

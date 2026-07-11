@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Summarize intermediate-frequency alleles from samtools mpileup."""
+"""Summarize substitution-only intermediate-frequency alleles from mpileup."""
 
 from __future__ import annotations
 

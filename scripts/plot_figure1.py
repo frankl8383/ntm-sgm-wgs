@@ -127,7 +127,7 @@ def plot_flow(ax: plt.Axes) -> pd.DataFrame:
     ax.set_ylim(0, 1)
     ax.axis("off")
     panel_label(ax, "a")
-    ax.text(0, 1.035, "Evidence-tracked reconstruction of the local cohort", va="bottom")
+    ax.text(0, 1.035, "Cohort reconstruction after targeted recovery", va="bottom")
 
     draw_box(ax, 0.00, 0.40, 0.14, 0.34, "Presumed\nSGM-NTM", 38, COLORS["neutral"])
     draw_box(ax, 0.24, 0.64, 0.15, 0.28, "Directly\ninterpretable", 13, "#C8E0DD")
