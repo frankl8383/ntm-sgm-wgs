@@ -1,8 +1,0 @@
-channels:
-  - conda-forge
-  - bioconda
-  - defaults
-dependencies:
-  - spades=4.2.0
-  - rasusa=4.1.0
-  - pigz
