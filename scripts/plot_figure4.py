@@ -76,7 +76,9 @@ def panel_label(ax: plt.Axes, label: str, x: float = -0.11, y: float = 1.04) -> 
     )
 
 
-def read_inputs(project: Path) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+def read_inputs(
+    project: Path,
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.Series]:
     analysis = project / "analysis_global_mac_upgrade"
     stage1 = pd.read_csv(
         analysis
@@ -94,9 +96,17 @@ def read_inputs(project: Path) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame
         analysis / "results/20_nearmac_dilution/source_pair_fastani_corrected.tsv",
         sep="\t",
     )
+    dependence = pd.read_csv(
+        analysis
+        / "results/32_submission_freeze/technical_window_dependence/"
+        "technical_window_overlap_summary.tsv",
+        sep="\t",
+    )
     if complete.shape[0] != 40:
         raise ValueError(f"Figure 4 requires 40 complete conditions; found {complete.shape[0]}")
-    return stage1, complete, ani
+    if dependence.shape[0] != 1:
+        raise ValueError("Figure 4 requires one technical-window dependence summary row")
+    return stage1, complete, ani, dependence.iloc[0]
 
 
 def pair_ani_summary(ani: pd.DataFrame) -> pd.DataFrame:
@@ -175,7 +185,9 @@ def plot_pair_ani(ax: plt.Axes, data: pd.DataFrame) -> None:
     )
 
 
-def plot_stage1_detection(ax: plt.Axes, data: pd.DataFrame) -> pd.DataFrame:
+def plot_stage1_detection(
+    ax: plt.Axes, data: pd.DataFrame, dependence: pd.Series
+) -> pd.DataFrame:
     summary = (
         data.groupby("minor_percent", as_index=False)
         .apply(
@@ -212,7 +224,7 @@ def plot_stage1_detection(ax: plt.Axes, data: pd.DataFrame) -> pd.DataFrame:
     ax.set_xticks([0, 5, 10, 20, 30, 50])
     ax.set_yticks([0, 6, 12, 18, 24])
     ax.set_xlabel("Minor-source reads (%)")
-    ax.set_ylabel("Positive technical windows / 24")
+    ax.set_ylabel("Positive dependent windows / 24")
     ax.set_title("Clean-reference dilution stage", loc="left", fontweight="bold", pad=3)
     ax.grid(axis="y", color=GRID, linewidth=0.45)
     ax.legend(loc="lower right", fontsize=5.7, handlelength=1.7)
@@ -227,6 +239,18 @@ def plot_stage1_detection(ax: plt.Axes, data: pd.DataFrame) -> pd.DataFrame:
                 fontsize=5.3,
                 color=PRIMARY,
             )
+    mean_overlap = 100 * float(dependence["mean_pairwise_overlap_fraction"])
+    maximum_overlap = 100 * float(dependence["maximum_pairwise_overlap_fraction"])
+    ax.text(
+        0,
+        -0.23,
+        f"Three deterministic windows per source; mean overlap {mean_overlap:.1f}%, max {maximum_overlap:.1f}%",
+        transform=ax.transAxes,
+        ha="left",
+        va="top",
+        fontsize=5.3,
+        color=MID,
+    )
     return summary
 
 
@@ -381,7 +405,7 @@ def plot_depth_matrix(ax: plt.Axes, complete: pd.DataFrame) -> pd.DataFrame:
     ax.set_yticklabels(labels)
     ax.tick_params(length=0)
     ax.set_title(
-        "Depth sensitivity of the complete two-route rule",
+        "Nested-depth sensitivity of the complete two-route rule",
         loc="left",
         fontweight="bold",
         pad=3,
@@ -450,6 +474,11 @@ def write_source_data(
 ) -> None:
     source = output / "source_data"
     source.mkdir(parents=True, exist_ok=True)
+    for stale_name in (
+        "Figure4_stage1_dilution_aggregate.tsv",
+        "Figure4_stage2_selected_two_route.tsv",
+    ):
+        (source / stale_name).unlink(missing_ok=True)
     stage1.to_csv(source / "Figure4_stage1_technical_windows.tsv", sep="\t", index=False)
     stage1_summary.to_csv(
         source / "Figure4_stage1_detection_summary.tsv", sep="\t", index=False
@@ -464,7 +493,7 @@ def write_source_data(
 def main() -> None:
     args = parse_args()
     project = args.project_root.resolve()
-    stage1, complete, ani = read_inputs(project)
+    stage1, complete, ani, dependence = read_inputs(project)
     pair_ani = pair_ani_summary(ani)
     set_style()
     width_inches = 183 / 25.4
@@ -487,7 +516,7 @@ def main() -> None:
     ax_d = figure.add_subplot(grid[1, 1:7])
 
     plot_pair_ani(ax_a, pair_ani)
-    stage1_summary = plot_stage1_detection(ax_b, stage1)
+    stage1_summary = plot_stage1_detection(ax_b, stage1, dependence)
     ten_percent = plot_complete_ten_percent(ax_c, complete)
     plot_depth_matrix(ax_d, complete)
     for axis, label in zip((ax_a, ax_b, ax_c, ax_d), "abcd"):
@@ -498,6 +527,8 @@ def main() -> None:
         / "analysis_global_mac_upgrade/results/26_review_resolution_figures"
     )
     output.mkdir(parents=True, exist_ok=True)
+    for suffix in (".pdf", ".png", ".svg", ".tiff"):
+        (output / f"Figure4_nearMAC_dilution_benchmark{suffix}").unlink(missing_ok=True)
     write_source_data(output, stage1, complete, pair_ani, stage1_summary, ten_percent)
     stem = output / "Figure4_nearMAC_expanded_benchmark"
     figure.savefig(f"{stem}.svg", facecolor="white")

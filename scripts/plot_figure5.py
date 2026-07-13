@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Plot external and public validation of four lineage-associated blocks."""
+"""Plot external and public evaluation of four lineage-associated intervals."""
 
 from __future__ import annotations
 
@@ -221,7 +221,7 @@ def plot_external_matrix(
     ax.text(
         -3.55,
         -1.43,
-        "Documented external evaluation (PRJNA983112)",
+        "External evaluation: 9 records, 5 anchor-qualified (PRJNA983112)",
         fontsize=7.5,
         fontweight="bold",
         color=INK,
@@ -230,7 +230,7 @@ def plot_external_matrix(
     )
     ax.text(-3.55, -0.72, "Isolate", fontsize=6, color=MID, ha="left")
     ax.text(-2.65, -0.72, "Published", fontsize=6, color=MID, ha="left")
-    ax.text(-1.23, -0.72, "Principal-anchor ANI", fontsize=6, color=MID, ha="center")
+    ax.text(-1.23, -0.72, "Anchor-qualified group", fontsize=6, color=MID, ha="center")
     ax.text(-0.52, -0.72, "QC", fontsize=6, color=MID, ha="center")
     for column_index, block in enumerate(BLOCK_ORDER):
         ax.text(
@@ -356,18 +356,6 @@ def plot_external_matrix(
         color=MP,
         fontweight="bold",
     )
-    ax.text(
-        1.0,
-        -0.10,
-        "Published groups define the prespecified external strata; anchor-qualified rows form the lineage comparison. "
-        "'Outside' denotes <98.60% ANI to both principal-lineage anchors. "
-        "Filled cell, one-contig block; triangle, QC warning; red outline, read/assembly content mismatch.",
-        transform=ax.transAxes,
-        ha="right",
-        va="top",
-        fontsize=5.4,
-        color=MID,
-    )
     return order
 
 
@@ -447,18 +435,6 @@ def plot_public_matrix(ax: plt.Axes, data: pd.DataFrame) -> None:
         fontweight="bold",
         color=INK,
     )
-    ax.text(
-        1.0,
-        -0.18,
-        "T, TMI; M, MP-MIP. Cells show genomes with the block / genomes tested.",
-        transform=ax.transAxes,
-        ha="right",
-        va="top",
-        fontsize=5.4,
-        color=MID,
-    )
-
-
 def draw_locus_row(
     ax: plt.Axes,
     y: float,
@@ -468,7 +444,7 @@ def draw_locus_row(
     count_label: str,
 ) -> None:
     ax.text(0.01, y, label, ha="left", va="center", fontsize=6.0, color=INK)
-    for x, width in ((0.23, 0.11), (0.61, 0.11)):
+    for x, width in ((0.18, 0.10), (0.52, 0.10)):
         ax.add_patch(
             FancyBboxPatch(
                 (x, y - 0.055),
@@ -483,8 +459,8 @@ def draw_locus_row(
     if block_present:
         ax.add_patch(
             FancyBboxPatch(
-                (0.39, y - 0.075),
-                0.18,
+                (0.32, y - 0.075),
+                0.16,
                 0.15,
                 boxstyle="round,pad=0.004,rounding_size=0.008",
                 linewidth=0.7,
@@ -495,8 +471,8 @@ def draw_locus_row(
     else:
         ax.add_patch(
             Rectangle(
-                (0.39, y - 0.06),
-                0.18,
+                (0.32, y - 0.06),
+                0.16,
                 0.12,
                 linewidth=0.8,
                 edgecolor=MID,
@@ -504,8 +480,8 @@ def draw_locus_row(
                 linestyle=(0, (2, 1.5)),
             )
         )
-        ax.text(0.48, y, "absent", ha="center", va="center", fontsize=5.2, color=MID)
-    ax.text(0.98, y, count_label, ha="right", va="center", fontsize=5.4, color=INK)
+        ax.text(0.40, y, "absent", ha="center", va="center", fontsize=5.2, color=MID)
+    ax.text(0.72, y, count_label, ha="left", va="center", fontsize=5.4, color=INK)
 
 
 def context_count(
@@ -547,6 +523,7 @@ def plot_structural_context(ax: plt.Axes, context: pd.DataFrame) -> None:
         fontweight="bold",
         color=INK,
     )
+    ax.text(0.72, 0.89, "genomes", ha="left", va="center", fontsize=5.2, color=MID)
     mp_block = "MP_MIP_oxidoreductase_associated_block"
     tmi_block = "TMI_methyltransferase_hydrolase_cupin_block"
     mp_present = context_count(
@@ -565,21 +542,21 @@ def plot_structural_context(ax: plt.Axes, context: pd.DataFrame) -> None:
         context, tmi_block, "MI_MP_MIP_lineage", "both_flanks_supported_block_absent"
     )
     mp_block_total = lineage_total(context, tmi_block, "MI_MP_MIP_lineage")
-    ax.text(0.01, 0.82, "MP-MIP oxidoreductase block", fontsize=6.1, fontweight="bold", color=MP)
-    draw_locus_row(ax, 0.68, "MP-MIP", MP, True, f"{mp_present}/{mp_total} block + flanks")
-    draw_locus_row(ax, 0.51, "TMI", MP, False, f"{tmi_absent}/{tmi_total} retain flanks")
-    ax.text(0.01, 0.38, "TMI methyl/hydrolase block", fontsize=6.1, fontweight="bold", color=TMI)
+    ax.text(0.01, 0.82, "MP-MIP oxidoreductase interval", fontsize=6.1, fontweight="bold", color=MP)
+    draw_locus_row(ax, 0.68, "MP-MIP", MP, True, f"{mp_present}/{mp_total}")
+    draw_locus_row(ax, 0.51, "TMI", MP, False, f"{tmi_absent}/{tmi_total}")
+    ax.text(0.01, 0.38, "TMI methyl/hydrolase interval", fontsize=6.1, fontweight="bold", color=TMI)
     draw_locus_row(
-        ax, 0.24, "TMI", TMI, True, f"{tmi_present}/{tmi_block_total} block + flanks"
+        ax, 0.24, "TMI", TMI, True, f"{tmi_present}/{tmi_block_total}"
     )
     draw_locus_row(
-        ax, 0.09, "MP-MIP", TMI, False, f"{mp_absent}/{mp_block_total} retain flanks"
+        ax, 0.09, "MP-MIP", TMI, False, f"{mp_absent}/{mp_block_total}"
     )
-    ax.text(0.48, 0.89, "lineage-associated block", ha="center", va="center", fontsize=5.2, color=MID)
+    ax.text(0.40, 0.89, "candidate interval", ha="center", va="center", fontsize=5.2, color=MID)
     ax.annotate(
         "",
-        xy=(0.48, 0.84),
-        xytext=(0.48, 0.875),
+        xy=(0.40, 0.84),
+        xytext=(0.40, 0.875),
         arrowprops={"arrowstyle": "-", "color": MID, "lw": 0.6},
     )
 
@@ -594,24 +571,33 @@ def main() -> None:
     source = output / "source_data"
     output.mkdir(parents=True, exist_ok=True)
     source.mkdir(parents=True, exist_ok=True)
+    for suffix in (".pdf", ".png", ".svg", ".tiff"):
+        (output / f"Figure5_structural_block_validation{suffix}").unlink(missing_ok=True)
+    for stale_name in (
+        "Figure5a_prevalence_sensitivity.tsv",
+        "Figure5b_flanking_context.tsv",
+        "Figure5c_Mi31_route_read_evidence.tsv",
+        "Figure5d_minimum_change_summary.tsv",
+    ):
+        (source / stale_name).unlink(missing_ok=True)
     annotation.to_csv(source / "Figure5a_external_annotations.tsv", sep="\t", index=False)
     qc.to_csv(source / "Figure5a_external_qc.tsv", sep="\t", index=False)
-    calls.to_csv(source / "Figure5a_external_block_calls.tsv", sep="\t", index=False)
-    reads.to_csv(source / "Figure5a_external_read_support.tsv", sep="\t", index=False)
+    calls.to_csv(source / "Figure5a_external_interval_calls.tsv", sep="\t", index=False)
+    reads.to_csv(source / "Figure5a_external_family_read_support.tsv", sep="\t", index=False)
     prevalence.to_csv(source / "Figure5b_public_sensitivities.tsv", sep="\t", index=False)
     flanking_context.to_csv(source / "Figure5c_flanking_context.tsv", sep="\t", index=False)
 
     set_style()
-    figure = plt.figure(figsize=(183 / 25.4, 160 / 25.4), facecolor="white")
+    figure = plt.figure(figsize=(183 / 25.4, 142 / 25.4), facecolor="white")
     grid = figure.add_gridspec(
         2,
         10,
         left=0.145,
         right=0.985,
-        top=0.94,
-        bottom=0.10,
-        height_ratios=[1.34, 1.0],
-        hspace=0.48,
+        top=0.95,
+        bottom=0.07,
+        height_ratios=[1.18, 1.0],
+        hspace=0.16,
         wspace=0.90,
     )
     ax_a = figure.add_subplot(grid[0, :])
@@ -622,7 +608,7 @@ def main() -> None:
     plot_structural_context(ax_c, flanking_context)
     for axis, label in zip((ax_a, ax_b, ax_c), "abc"):
         panel_label(axis, label)
-    stem = output / "Figure5_external_block_validation"
+    stem = output / "Figure5_external_interval_evaluation"
     figure.savefig(stem.with_suffix(".svg"), facecolor="white", bbox_inches="tight")
     figure.savefig(stem.with_suffix(".pdf"), facecolor="white", bbox_inches="tight")
     figure.savefig(stem.with_suffix(".png"), dpi=300, facecolor="white", bbox_inches="tight")

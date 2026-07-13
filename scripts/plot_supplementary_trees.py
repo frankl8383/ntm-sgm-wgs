@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Plot complete public-context trees for the upgraded supplement."""
+"""Plot complete public-context trees for the supplement."""
 
 from __future__ import annotations
 

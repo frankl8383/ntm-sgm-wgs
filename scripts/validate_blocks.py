@@ -17,6 +17,14 @@ from statsmodels.stats.contingency_tables import StratifiedTable
 TMI = "MI_TMI_lineage"
 MP = "MI_MP_MIP_lineage"
 GENE_SUFFIX = re.compile(r"_(\d+)$")
+CORE_BLOCKS = {
+    "TMI_aromatic_catabolism_associated_block",
+    "TMI_methyltransferase_hydrolase_cupin_block",
+    "MP_MIP_nitrogen_redox_associated_block",
+    "MP_MIP_oxidoreductase_associated_block",
+}
+SECONDARY_SIGNAL = "MP_MIP_ArsN1_family_B_signal"
+TRACKED_SIGNALS = CORE_BLOCKS | {SECONDARY_SIGNAL}
 
 
 def benjamini_hochberg(values: np.ndarray) -> np.ndarray:
@@ -78,7 +86,6 @@ def main() -> None:
     parser.add_argument("--search-tsv", required=True)
     parser.add_argument("--sequence-metadata", required=True)
     parser.add_argument("--panel-manifest", required=True)
-    parser.add_argument("--discovery-panel-manifest")
     parser.add_argument("--atlas-metadata", required=True)
     parser.add_argument("--output-dir", required=True)
     args = parser.parse_args()
@@ -87,6 +94,11 @@ def main() -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
     blocks = pd.read_csv(args.block_summary, sep="\t", dtype=str).fillna("")
     members = pd.read_csv(args.block_members, sep="\t", dtype=str).fillna("")
+    blocks = blocks[blocks.block_id.isin(TRACKED_SIGNALS)].copy()
+    members = members[members.block_id.isin(TRACKED_SIGNALS)].copy()
+    if set(blocks.block_id) != TRACKED_SIGNALS:
+        missing = sorted(TRACKED_SIGNALS - set(blocks.block_id))
+        raise SystemExit(f"Five-signal multiplicity family is incomplete: {missing}")
     panel = pd.read_csv(args.panel_manifest, sep="\t", dtype=str).fillna("")
     sequence_meta = pd.read_csv(args.sequence_metadata, sep="\t", dtype=str).fillna("")
     atlas = pd.read_csv(args.atlas_metadata, sep="\t", dtype=str).fillna("")
@@ -207,80 +219,6 @@ def main() -> None:
         output_dir / "curated_blocks_full_atlas_per_genome.tsv", sep="\t", index=False
     )
 
-    if args.discovery_panel_manifest:
-        discovery_panel = pd.read_csv(
-            args.discovery_panel_manifest, sep="\t", dtype=str
-        ).fillna("")
-        discovery_ids = set(
-            discovery_panel[
-                discovery_panel.source.eq("public")
-                & discovery_panel.accessory_lineage.isin([TMI, MP])
-            ].tree_id
-        )
-        evaluation_panel = panel[
-            panel.source.eq("public")
-            & panel.accessory_lineage.isin([TMI, MP])
-            & ~panel.tree_id.isin(discovery_ids)
-        ].copy()
-        evaluation_panel[["tree_id", "accessory_lineage", "bioproject"]].to_csv(
-            output_dir / "non_discovery_public_membership.tsv", sep="\t", index=False
-        )
-        evaluation_tmi = set(
-            evaluation_panel[evaluation_panel.accessory_lineage.eq(TMI)].tree_id
-        )
-        evaluation_mp = set(
-            evaluation_panel[evaluation_panel.accessory_lineage.eq(MP)].tree_id
-        )
-        evaluation_rows: list[dict[str, object]] = []
-        evaluation_p_values: list[float] = []
-        for block in blocks.itertuples(index=False):
-            block_id = str(block.block_id)
-            present = block_presence[block_id]
-            tmi_present = len(present & evaluation_tmi)
-            mp_present = len(present & evaluation_mp)
-            if str(block.association_direction) == "TMI_enriched":
-                table = [
-                    [tmi_present, len(evaluation_tmi) - tmi_present],
-                    [mp_present, len(evaluation_mp) - mp_present],
-                ]
-                expected_gap = (
-                    tmi_present / len(evaluation_tmi)
-                    - mp_present / len(evaluation_mp)
-                )
-            else:
-                table = [
-                    [mp_present, len(evaluation_mp) - mp_present],
-                    [tmi_present, len(evaluation_tmi) - tmi_present],
-                ]
-                expected_gap = (
-                    mp_present / len(evaluation_mp)
-                    - tmi_present / len(evaluation_tmi)
-                )
-            odds_ratio, p_value = fisher_exact(table)
-            evaluation_p_values.append(float(p_value))
-            evaluation_rows.append(
-                {
-                    "block_id": block_id,
-                    "association_direction": block.association_direction,
-                    "tmi_present": tmi_present,
-                    "tmi_total": len(evaluation_tmi),
-                    "mp_mip_present": mp_present,
-                    "mp_mip_total": len(evaluation_mp),
-                    "expected_direction_prevalence_gap": expected_gap,
-                    "expected_direction_odds_ratio": float(odds_ratio),
-                    "fisher_p_value": float(p_value),
-                }
-            )
-        evaluation = pd.DataFrame(evaluation_rows)
-        evaluation["fisher_fdr"] = benjamini_hochberg(
-            np.asarray(evaluation_p_values)
-        )
-        evaluation.to_csv(
-            output_dir / "non_discovery_public_block_statistics.tsv",
-            sep="\t",
-            index=False,
-        )
-
     summary_rows: list[dict[str, object]] = []
     p_values: list[float] = []
     high_qc_p_values: list[float] = []
@@ -332,6 +270,13 @@ def main() -> None:
         summary_rows.append(
             {
                 "block_id": block_id,
+                "signal_class": (
+                    "single_family_exploratory_signal"
+                    if block_id == SECONDARY_SIGNAL
+                    else "candidate_multigene_syntenic_interval"
+                ),
+                "multiplicity_family": "four_multigene_intervals_plus_ArsN1_family_B",
+                "multiplicity_family_size": len(TRACKED_SIGNALS),
                 "association_direction": direction,
                 "stable_protein_families": int(block.stable_protein_families),
                 "full_public_tmi_family_complete": len(
@@ -448,8 +393,11 @@ def main() -> None:
                     "block_id": block_id,
                     "association_direction": direction,
                     "mixed_bioprojects": len(strata),
-                    "informative_bioprojects": informative,
+                    "nonzero_prevalence_gap_bioprojects": informative,
                     "direction_concordant_bioprojects": concordant,
+                    "mantel_haenszel_strata_policy": (
+                        "all mixed-lineage BioProjects; 0.5 correction for zero cells"
+                    ),
                     "mantel_haenszel_common_odds_ratio_expected_direction": float(
                         table.oddsratio_pooled
                     ),
@@ -537,17 +485,19 @@ def main() -> None:
             "(CheckM2 completeness >=95%, contamination <=2%, contigs <=200 and N50 >=20 kb)."
         ),
         "",
-        "| Block | Public TMI | Public MP-MIP | Local TMI | Local MP-MIP | Fisher FDR | High-QC FDR | Mixed projects concordant | Leave-one-project-out |",
-        "|---|---:|---:|---:|---:|---:|---:|---:|---:|",
+        "Five tracked signals were corrected together: four candidate multigene intervals and one exploratory ArsN1 family B signal. The latter does not meet the multigene syntenic-interval definition.",
+        "",
+        "| Signal | Class | Public TMI | Public MP-MIP | Local TMI | Local MP-MIP | Fisher FDR | High-QC FDR | Mixed projects concordant | Leave-one-project-out |",
+        "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]
     for row in summary.to_dict(orient="records"):
         report.append(
-            "| {block_id} | {full_public_tmi_present}/{full_public_tmi_total} | "
+            "| {block_id} | {signal_class} | {full_public_tmi_present}/{full_public_tmi_total} | "
             "{full_public_mp_mip_present}/{full_public_mp_mip_total} | "
             "{full_local_tmi_present}/{full_local_tmi_total} | "
             "{full_local_mp_mip_present}/{full_local_mp_mip_total} | "
             "{full_public_fisher_fdr:.3g} | {high_qc_fisher_fdr:.3g} | "
-            "{direction_concordant_bioprojects:.0f}/{informative_bioprojects:.0f} | "
+            "{direction_concordant_bioprojects:.0f}/{nonzero_prevalence_gap_bioprojects:.0f} | "
             "{all_omissions_retain_direction} |".format(**row)
         )
     report.extend(

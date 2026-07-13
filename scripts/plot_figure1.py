@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Plot upgraded Figure 1: cohort recovery and mixture safeguards."""
+"""Plot Figure 1: cohort recovery and mixture safeguards."""
 
 from __future__ import annotations
 
@@ -133,7 +133,7 @@ def plot_flow(ax: plt.Axes) -> pd.DataFrame:
     draw_box(ax, 0.24, 0.64, 0.15, 0.28, "Directly\ninterpretable", 13, "#C8E0DD")
     draw_box(ax, 0.24, 0.31, 0.15, 0.28, "Recovery\ncandidates", 11, "#F1DFB8")
     draw_box(ax, 0.24, -0.02, 0.15, 0.28, "Not advanced\nto recovery", 14, "#EEEEEE")
-    draw_box(ax, 0.51, 0.46, 0.15, 0.28, "Recovered by\ntwo routes", 8, "#C8E0DD")
+    draw_box(ax, 0.51, 0.46, 0.15, 0.28, "Passed both\nrecovery routes", 8, "#C8E0DD")
     draw_box(ax, 0.51, 0.10, 0.15, 0.28, "Residual\nwithin-MAC mixture", 3, "#E8C8C5")
     draw_box(ax, 0.82, 0.46, 0.18, 0.28, "Interpretable\nMAC/SGM genomes", 21, "#BED2E4")
 
@@ -194,16 +194,17 @@ def plot_benchmark(ax: plt.Axes, benchmark: pd.DataFrame) -> pd.DataFrame:
         zorder=3,
         label="Cross-genus mixture",
     )
-    label_offsets = {25: (7, -14), 65: (7, -2), 95: (7, 10)}
-    for row in cross.itertuples(index=False):
-        target = int(round(float(row.target_fraction) * 100))
+    if not cross.empty:
+        cluster_x = float(cross.sensitivity_percent.mean())
+        cluster_y = float(cross.precision_percent.mean())
         ax.annotate(
-            f"{target}% target",
-            (row.sensitivity_percent, row.precision_percent),
-            xytext=label_offsets[target],
+            "cross-genus controls\n25-95% target",
+            (cluster_x, cluster_y),
+            xytext=(10, -7),
             textcoords="offset points",
             fontsize=6.1,
             ha="left",
+            va="top",
             arrowprops={"arrowstyle": "-", "color": "#9A9A9A", "lw": 0.45},
         )
     ax.scatter(
@@ -215,12 +216,12 @@ def plot_benchmark(ax: plt.Axes, benchmark: pd.DataFrame) -> pd.DataFrame:
         edgecolor="white",
         linewidth=0.5,
         zorder=3,
-        label="50:50 within-MAC control",
+        label="50:50 within-MAC failure control",
     )
     if not near.empty:
         row = near.iloc[0]
         ax.annotate(
-            "near-neighbour\ncontrol",
+            "50:50 within-MAC\nfailure control",
             (row.sensitivity_percent, row.precision_percent),
             xytext=(5, 0),
             textcoords="offset points",
@@ -234,16 +235,6 @@ def plot_benchmark(ax: plt.Axes, benchmark: pd.DataFrame) -> pd.DataFrame:
     ax.set_ylabel("Recruited-pair precision (%)")
     ax.set_yticks([40, 60, 80, 100])
     ax.spines[["top", "right"]].set_visible(False)
-    ax.text(
-        0.98,
-        0.95,
-        "cross-genus mixtures",
-        transform=ax.transAxes,
-        ha="right",
-        va="top",
-        fontsize=6.1,
-        color=COLORS["direct"],
-    )
     return strict[
         [
             "benchmark",
@@ -365,7 +356,7 @@ def main() -> None:
     benchmark = pd.read_csv(args.benchmark_summary, sep="\t")
     outcomes = pd.read_csv(args.rescue_outcomes, sep="\t")
 
-    fig = plt.figure(figsize=(183 * MM, 139 * MM))
+    fig = plt.figure(figsize=(183 * MM, 132 * MM))
     grid = fig.add_gridspec(
         2,
         2,
@@ -375,7 +366,7 @@ def main() -> None:
         right=0.985,
         top=0.965,
         bottom=0.12,
-        hspace=0.52,
+        hspace=0.38,
         wspace=0.34,
     )
     ax_flow = fig.add_subplot(grid[0, :])

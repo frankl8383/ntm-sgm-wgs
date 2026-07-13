@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Plot upgraded Figure 2: current MAC atlas and local ANI context."""
+"""Plot Figure 2: current MAC atlas and local ANI context."""
 
 from __future__ import annotations
 
@@ -80,7 +80,7 @@ def panel_label(ax: plt.Axes, label: str, x: float = -0.08) -> None:
 
 
 def plot_atlas_flow(
-    ax: plt.Axes, atlas: pd.DataFrame, raw_count: int, dedup_count: int
+    ax: plt.Axes, atlas: pd.DataFrame, raw_count: int, qc_pass_count: int
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     panel_label(ax, "a", x=-0.035)
     ax.set_title("Current NCBI MAC atlas used for public context", loc="left", pad=8)
@@ -89,8 +89,8 @@ def plot_atlas_flow(
     ax.axis("off")
     boxes = [
         (0.00, "Current records", raw_count, "#ECECEC"),
-        (0.20, "Paired/BioSample\ndeduplicated", dedup_count, "#DDE6EE"),
-        (0.43, "Assembly-QC\nselected", len(atlas), "#C7D9E8"),
+        (0.20, "Assembly-QC\npass", qc_pass_count, "#DDE6EE"),
+        (0.43, "QC-first paired/\nBioSample dedup.", len(atlas), "#C7D9E8"),
     ]
     for x, title, count, color in boxes:
         ax.add_patch(Rectangle((x, 0.30), 0.16, 0.47, facecolor=color, edgecolor="none"))
@@ -120,7 +120,7 @@ def plot_atlas_flow(
         if segment > 0.035:
             ax.text(cursor + segment / 2, 0.565, str(row.n), ha="center", va="center", fontsize=6.2, color="white" if color != "#C9C9C9" else COLORS["ink"])
         cursor += segment
-    ax.text(left, 0.75, "Current reporting labels (n = 478)", fontsize=6.7, ha="left")
+    ax.text(left, 0.75, f"Current reporting labels (n = {len(atlas)})", fontsize=6.7, ha="left")
     legend_y = 0.30
     for index, (row, color) in enumerate(zip(top.itertuples(index=False), species_colors, strict=False)):
         col = index % 2
@@ -132,7 +132,11 @@ def plot_atlas_flow(
         ax.text(x + 0.012, y, f"{label} ({row.n})", va="center", ha="left", fontsize=5.4)
 
     flow = pd.DataFrame(
-        [("current_records", raw_count), ("deduplicated", dedup_count), ("qc_selected", len(atlas))],
+        [
+            ("current_records", raw_count),
+            ("assembly_qc_pass", qc_pass_count),
+            ("qc_first_pair_and_biosample_deduplicated", len(atlas)),
+        ],
         columns=["stage", "n"],
     )
     return flow, composition
@@ -264,7 +268,7 @@ def main() -> None:
     parser.add_argument("--local-labels", required=True)
     parser.add_argument("--ani-summary", required=True)
     parser.add_argument("--raw-count", type=int, default=1283)
-    parser.add_argument("--dedup-count", type=int, default=650)
+    parser.add_argument("--qc-pass-count", type=int, default=957)
     parser.add_argument("--output-dir", required=True)
     args = parser.parse_args()
     configure()
@@ -293,7 +297,9 @@ def main() -> None:
     ax_ani = fig.add_subplot(bottom[0, 1])
     ax_margin = fig.add_subplot(bottom[0, 2])
 
-    flow_source, atlas_composition = plot_atlas_flow(ax_flow, atlas, args.raw_count, args.dedup_count)
+    flow_source, atlas_composition = plot_atlas_flow(
+        ax_flow, atlas, args.raw_count, args.qc_pass_count
+    )
     local_source = plot_local_composition(ax_comp, labels)
     ani_source = plot_best_ani(ax_ani, merged)
     margin_source = plot_margins(ax_margin, merged)

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Plot upgraded Figure 3: MI phylogeny and validated accessory blocks."""
+"""Plot Figure 3: MI phylogeny and candidate syntenic intervals."""
 
 from __future__ import annotations
 
@@ -35,6 +35,12 @@ ROW_LABELS = {
     CORE_BLOCKS[1]: "Methyl./cupin",
     CORE_BLOCKS[2]: "N-redox",
     CORE_BLOCKS[3]: "Oxidoreductase",
+}
+HEAT_LABELS = {
+    CORE_BLOCKS[0]: "Aromatic",
+    CORE_BLOCKS[1]: "Methyl.",
+    CORE_BLOCKS[2]: "N/redox",
+    CORE_BLOCKS[3]: "Oxidored.",
 }
 COLORS = {
     "ink": "#242424",
@@ -226,7 +232,7 @@ def plot_tree_and_blocks(
     ax_tree.spines[["left", "right", "top"]].set_visible(False)
     ax_tree.tick_params(axis="x", length=2.5)
     ax_tree.set_title(
-        f"Balanced complete-core SNP phylogeny (n = {len(comparison_set)}; anchor-rooted)",
+        f"TMI/MP-MIP complete-core SNP phylogeny (n = {len(comparison_set)})",
         loc="left",
         pad=8,
     )
@@ -237,12 +243,12 @@ def plot_tree_and_blocks(
     ax_heat.set_xlim(-0.5, len(CORE_BLOCKS) - 0.5)
     ax_heat.set_xticks(range(len(CORE_BLOCKS)))
     ax_heat.set_xticklabels(
-        [BLOCK_LABELS[block] for block in CORE_BLOCKS],
-        rotation=52,
+        [HEAT_LABELS[block] for block in CORE_BLOCKS],
+        rotation=90,
         ha="left",
-        va="bottom",
+        va="center",
         rotation_mode="anchor",
-        fontsize=5.2,
+        fontsize=4.9,
     )
     ax_heat.xaxis.tick_top()
     ax_heat.tick_params(axis="x", length=0, pad=3)
@@ -297,7 +303,7 @@ def plot_prevalence(ax: plt.Axes, validation: pd.DataFrame) -> pd.DataFrame:
     ax.set_ylim(-0.6, len(data) - 0.3)
     ax.set_yticks(y)
     ax.set_yticklabels([ROW_LABELS[block] for block in data.block_id])
-    ax.set_xlabel("Public genomes with syntenic block (%)")
+    ax.set_xlabel("Public genomes with candidate interval (%)")
     ax.set_xticks([0, 25, 50, 75, 100])
     ax.spines[["top", "right", "left"]].set_visible(False)
     ax.tick_params(axis="y", length=0)
@@ -320,6 +326,20 @@ def plot_project_forest(ax: plt.Axes, stats: pd.DataFrame) -> pd.DataFrame:
     for index in range(len(data)):
         ax.plot([lower[index], upper[index]], [y[index], y[index]], color=colors[index], linewidth=1.2)
         ax.scatter(odds[index], y[index], s=26, color=colors[index], zorder=3)
+        informative_column = (
+            "nonzero_prevalence_gap_bioprojects"
+            if "nonzero_prevalence_gap_bioprojects" in data.columns
+            else "informative_bioprojects"
+        )
+        ax.text(
+            305,
+            y[index],
+            f"{int(data.iloc[index][informative_column])}/5",
+            ha="right",
+            va="center",
+            fontsize=5.0,
+            color=COLORS["muted"],
+        )
     ax.axvline(1, color="#999999", linestyle="--", linewidth=0.8)
     ax.set_xscale("log")
     ax.set_xlim(1, 320)
@@ -332,7 +352,7 @@ def plot_project_forest(ax: plt.Axes, stats: pd.DataFrame) -> pd.DataFrame:
     ax.text(
         0.99,
         0.03,
-        "5 BioProjects with both lineages",
+        "Informative/mixed-lineage BioProjects shown by row",
         transform=ax.transAxes,
         ha="right",
         va="bottom",
@@ -450,7 +470,7 @@ def plot_neighborhoods(ax: plt.Axes, genes: pd.DataFrame) -> None:
         ax.text(
             0.0,
             y,
-            f"{BLOCK_LABELS[block].replace(chr(10), ' ')} ({int(frame.stable_family.sum())})",
+            f"{ROW_LABELS[block]} ({int(frame.stable_family.sum())})",
             ha="left",
             va="center",
             fontsize=5.6,
@@ -499,7 +519,7 @@ def main() -> None:
         width_ratios=[1.72, 1.0],
         left=0.055,
         right=0.985,
-        top=0.965,
+        top=0.94,
         bottom=0.06,
         wspace=0.30,
     )
@@ -520,10 +540,10 @@ def main() -> None:
     plot_neighborhoods(ax_genes, genes)
 
     tree_source.to_csv(
-        source_dir / "Figure3a_tree_aligned_block_presence.tsv", sep="\t", index=False
+        source_dir / "Figure3a_tree_aligned_interval_presence.tsv", sep="\t", index=False
     )
     prevalence_source.to_csv(
-        source_dir / "Figure3b_full_atlas_block_prevalence.tsv", sep="\t", index=False
+        source_dir / "Figure3b_full_atlas_interval_prevalence.tsv", sep="\t", index=False
     )
     project_source.to_csv(
         source_dir / "Figure3c_bioproject_stratified_statistics.tsv", sep="\t", index=False
@@ -532,7 +552,7 @@ def main() -> None:
         source_dir / "Figure3d_representative_gene_order.tsv", sep="\t", index=False
     )
 
-    stem = output_dir / "Figure3_MI_lineage_accessory_blocks"
+    stem = output_dir / "Figure3_MI_lineage_syntenic_intervals"
     fig.savefig(stem.with_suffix(".pdf"), bbox_inches="tight")
     fig.savefig(stem.with_suffix(".svg"), bbox_inches="tight")
     fig.savefig(stem.with_suffix(".tiff"), dpi=600, bbox_inches="tight")

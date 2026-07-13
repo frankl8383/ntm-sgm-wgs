@@ -28,8 +28,8 @@ TOTAL_PAIRS = 2_000_000
 PAIR_DEFINITIONS = {
     "pairA": ("Mi1", "Ma20", "calibration_cross_lineage"),
     "pairB": ("Mi2", "Mi22", "calibration_cross_lineage"),
-    "pairC": ("Mi23", "Mi8", "untouched_validation_within_mp_mip"),
-    "pairD": ("Mi25", "Mi4", "untouched_validation_within_mp_mip"),
+    "pairC": ("Mi23", "Mi8", "evaluation_within_mp_mip"),
+    "pairD": ("Mi25", "Mi4", "evaluation_within_mp_mip"),
 }
 
 
