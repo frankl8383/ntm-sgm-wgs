@@ -61,6 +61,41 @@ class ResidualMixtureTests(unittest.TestCase):
         self.assertEqual(int(row["mixed_sites_maf_0.10_0.90"]), 2)
         self.assertEqual(int(row["mixed_sites_maf_0.20_0.80"]), 1)
 
+    def test_multidigit_indels_and_minor_count_gate(self):
+        module = load_module()
+        self.assertEqual(
+            module.base_counts("C", ".,+10acgtacgtacAAAAA"),
+            {"C": 2, "A": 5},
+        )
+        pileup = "\n".join(
+            [
+                "ctg\t1\tC\t20\t" + "." * 16 + "A" * 4 + "\t*",
+                "ctg\t2\tC\t20\t" + "." * 15 + "A" * 5 + "\t*",
+                "ctg\t3\tC\t50\t" + "." * 45 + "A" * 5 + "\t*",
+            ]
+        ) + "\n"
+        with tempfile.TemporaryDirectory() as tempdir:
+            output = Path(tempdir) / "summary.tsv"
+            subprocess.run(
+                [
+                    sys.executable,
+                    str(SCRIPT),
+                    "--sample",
+                    "synthetic",
+                    "--route",
+                    "test",
+                    "--output",
+                    str(output),
+                ],
+                input=pileup,
+                text=True,
+                check=True,
+            )
+            with output.open() as handle:
+                row = next(csv.DictReader(handle, delimiter="\t"))
+        self.assertEqual(int(row["mixed_sites_maf_0.10_0.90"]), 2)
+        self.assertEqual(int(row["mixed_sites_maf_0.20_0.80"]), 1)
+
 
 if __name__ == "__main__":
     unittest.main()

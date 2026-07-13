@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Plot the reciprocal near-MAC dilution benchmark and route confirmation."""
+"""Plot the prespecified near-MAC benchmark after all 40 reconstructions complete."""
 
 from __future__ import annotations
 
@@ -12,9 +12,6 @@ import numpy as np
 import pandas as pd
 
 
-PRIMARY_THRESHOLD = 161.8
-AUXILIARY_THRESHOLD = 952.42
-FRACTIONS = [0, 5, 10, 20, 30, 50]
 PAIR_ORDER = ["pairA", "pairB", "pairC", "pairD"]
 PAIR_SAMPLES = {
     "pairA": ("Mi1", "Ma20"),
@@ -22,26 +19,24 @@ PAIR_SAMPLES = {
     "pairC": ("Mi23", "Mi8"),
     "pairD": ("Mi25", "Mi4"),
 }
-PAIR_LABELS = {
-    "pairA": "A  Mi1 / Ma20",
-    "pairB": "B  Mi2 / Mi22",
-    "pairC": "C  Mi23 / Mi8",
-    "pairD": "D  Mi25 / Mi4",
-}
 PAIR_COLORS = {
-    "pairA": "#3B6FB6",
-    "pairB": "#29926D",
-    "pairC": "#D79A24",
-    "pairD": "#A95A8B",
+    "pairA": "#3F6E9A",
+    "pairB": "#5B8C72",
+    "pairC": "#C28A32",
+    "pairD": "#9A6687",
 }
-INK = "#292929"
-MID = "#6D6D6D"
-GRID = "#D9D9D9"
-PALE = "#F2F2F2"
+PRIMARY_THRESHOLD = 161.8
+AUXILIARY_THRESHOLD = 952.42
+INK = "#252525"
+MID = "#686868"
+GRID = "#D8D8D8"
+NEGATIVE = "#E8E8E8"
+AUXILIARY = "#D9A441"
+PRIMARY = "#3D8875"
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--project-root", type=Path, default=Path.cwd())
     return parser.parse_args()
 
@@ -52,7 +47,7 @@ def set_style() -> None:
             "font.family": "sans-serif",
             "font.sans-serif": ["Arial", "Helvetica", "DejaVu Sans", "sans-serif"],
             "font.size": 7,
-            "axes.titlesize": 7.5,
+            "axes.titlesize": 7.4,
             "axes.labelsize": 7,
             "xtick.labelsize": 6.2,
             "ytick.labelsize": 6.2,
@@ -66,7 +61,7 @@ def set_style() -> None:
     )
 
 
-def panel_label(ax: plt.Axes, label: str, x: float = -0.12, y: float = 1.04) -> None:
+def panel_label(ax: plt.Axes, label: str, x: float = -0.11, y: float = 1.04) -> None:
     ax.text(
         x,
         y,
@@ -81,36 +76,44 @@ def panel_label(ax: plt.Axes, label: str, x: float = -0.12, y: float = 1.04) -> 
     )
 
 
-def sample_from_path(value: str) -> str:
-    return Path(value).name.split(".")[0]
-
-
-def load_pair_ani(path: Path) -> pd.DataFrame:
-    raw = pd.read_csv(
-        path,
+def read_inputs(project: Path) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    analysis = project / "analysis_global_mac_upgrade"
+    stage1 = pd.read_csv(
+        analysis
+        / "results/20_nearmac_dilution/stage1_clean_reference/summary_analysis/"
+        "nearmac_dilution_aggregate.tsv",
         sep="\t",
-        header=None,
-        names=["query", "reference", "ani", "matched", "total"],
     )
-    raw["query_sample"] = raw["query"].map(sample_from_path)
-    raw["reference_sample"] = raw["reference"].map(sample_from_path)
+    complete = pd.read_csv(
+        analysis
+        / "results/27_postreview_validation/nearmac_expanded_two_route/"
+        "expanded_two_route_summary_complete.tsv",
+        sep="\t",
+    )
+    ani = pd.read_csv(
+        analysis / "results/20_nearmac_dilution/source_pair_fastani_corrected.tsv",
+        sep="\t",
+    )
+    if complete.shape[0] != 40:
+        raise ValueError(f"Figure 4 requires 40 complete conditions; found {complete.shape[0]}")
+    return stage1, complete, ani
+
+
+def pair_ani_summary(ani: pd.DataFrame) -> pd.DataFrame:
     rows: list[dict[str, object]] = []
     for pair_id in PAIR_ORDER:
         left, right = PAIR_SAMPLES[pair_id]
-        selected = raw.loc[
-            raw["query_sample"].isin([left, right])
-            & raw["reference_sample"].isin([left, right])
-            & raw["query_sample"].ne(raw["reference_sample"])
+        selected = ani.loc[
+            ani["query_sample"].isin([left, right])
+            & ani["reference_sample"].isin([left, right])
+            & ani["query_sample"].ne(ani["reference_sample"])
         ]
-        if len(selected) != 2:
-            raise ValueError(f"Expected two reciprocal ANI rows for {pair_id}, found {len(selected)}")
+        if selected.shape[0] != 2:
+            raise ValueError(f"Expected two reciprocal FastANI rows for {pair_id}")
         rows.append(
             {
                 "pair_id": pair_id,
-                "pair_label": PAIR_LABELS[pair_id],
-                "design_role": "calibration" if pair_id in {"pairA", "pairB"} else "untouched validation",
-                "left_sample": left,
-                "right_sample": right,
+                "samples": f"{left} / {right}",
                 "ani_mean": selected["ani"].mean(),
                 "ani_min": selected["ani"].min(),
                 "ani_max": selected["ani"].max(),
@@ -119,321 +122,393 @@ def load_pair_ani(path: Path) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def load_inputs(project: Path) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    root = project / "results" / "near_mac_dilution"
-    aggregate = pd.read_csv(
-        root / "stage1_clean_reference" / "summary_analysis" / "nearmac_dilution_aggregate.tsv",
-        sep="\t",
-    )
-    stage2_path = root / "stage2_two_route" / "selected_two_route_summary.tsv"
-    if not stage2_path.exists():
-        raise FileNotFoundError(
-            f"Stage 2 summary is not yet available: {stage2_path}. "
-            "Complete 72_run_nearmac_selected_two_route.py first."
-        )
-    stage2 = pd.read_csv(stage2_path, sep="\t")
-    pair_ani = load_pair_ani(root / "source_pair_all_vs_all_fastani.tsv")
-    return aggregate, stage2, pair_ani
-
-
-def direction_rank(frame: pd.DataFrame) -> pd.Series:
-    ranks: list[int] = []
-    for row in frame.itertuples(index=False):
-        left, right = PAIR_SAMPLES[row.pair_id]
-        ranks.append(0 if (row.major, row.minor) == (left, right) else 1)
-    return pd.Series(ranks, index=frame.index)
+def direction_label(row: pd.Series) -> str:
+    letter = row["pair_id"][-1]
+    return f"{letter}  {row['major']} + {row['minor']}"
 
 
 def plot_pair_ani(ax: plt.Axes, data: pd.DataFrame) -> None:
-    y = np.arange(len(data))
-    for index, row in data.iterrows():
+    positions = np.arange(data.shape[0])
+    for position, row in data.iterrows():
         color = PAIR_COLORS[row["pair_id"]]
         ax.plot(
             [row["ani_min"], row["ani_max"]],
-            [index, index],
+            [position, position],
             color=color,
-            linewidth=1.4,
+            linewidth=1.5,
             solid_capstyle="round",
         )
-        ax.scatter(row["ani_mean"], index, s=24, color=color, edgecolor="white", linewidth=0.6, zorder=3)
+        ax.scatter(
+            row["ani_mean"],
+            position,
+            s=25,
+            color=color,
+            edgecolor="white",
+            linewidth=0.6,
+            zorder=3,
+        )
         ax.text(
-            row["ani_max"] + 0.015,
-            index,
-            f"{row['ani_mean']:.2f}%",
-            ha="left",
+            row["ani_max"] + 0.012,
+            position,
+            f"{row['ani_mean']:.2f}",
             va="center",
-            fontsize=6,
+            fontsize=5.8,
             color=INK,
         )
-    ax.set_yticks(y)
-    ax.set_yticklabels(data["pair_label"])
+    ax.set_yticks(positions)
+    ax.set_yticklabels([f"{row.pair_id[-1]}  {row.samples}" for row in data.itertuples()])
     ax.invert_yaxis()
-    ax.set_xlim(98.82, 99.62)
+    ax.set_xlim(98.84, 99.58)
     ax.set_xlabel("Reciprocal FastANI (%)")
     ax.set_title("Challenge-pair similarity", loc="left", fontweight="bold", pad=3)
-    ax.grid(axis="x", color=GRID, linewidth=0.5)
+    ax.grid(axis="x", color=GRID, linewidth=0.45)
     ax.tick_params(axis="y", length=0)
     ax.text(
-        0.0,
-        -0.24,
-        "A/B calibration; C/D untouched validation",
+        0,
+        -0.22,
+        "A/B cross-lineage; C/D within MP-MIP",
         transform=ax.transAxes,
         ha="left",
         va="top",
-        fontsize=5.7,
+        fontsize=5.6,
         color=MID,
     )
 
 
-def plot_dilution_curves(
-    ax: plt.Axes,
-    data: pd.DataFrame,
-    mean_column: str,
-    min_column: str,
-    max_column: str,
-    threshold: float,
-    title: str,
-) -> None:
-    ranked = data.copy()
-    ranked["direction_rank"] = direction_rank(ranked)
-    for (pair_id, major, minor), group in ranked.groupby(["pair_id", "major", "minor"], sort=False):
-        group = group.sort_values("minor_percent")
-        rank = int(group["direction_rank"].iloc[0])
-        color = PAIR_COLORS[pair_id]
-        linestyle = "-" if rank == 0 else (0, (3, 1.5))
+def plot_stage1_detection(ax: plt.Axes, data: pd.DataFrame) -> pd.DataFrame:
+    summary = (
+        data.groupby("minor_percent", as_index=False)
+        .apply(
+            lambda group: pd.Series(
+                {
+                    "technical_windows": int(group["technical_windows"].sum()),
+                    "primary_positive": int(
+                        round((group["primary_detection_rate"] * group["technical_windows"]).sum())
+                    ),
+                    "combined_positive": int(
+                        round((group["combined_detection_rate"] * group["technical_windows"]).sum())
+                    ),
+                }
+            ),
+            include_groups=False,
+        )
+        .reset_index(drop=True)
+    )
+    for column, color, marker, label in (
+        ("primary_positive", "#3F6E9A", "o", "20-80% rule"),
+        ("combined_positive", PRIMARY, "s", "Combined rule"),
+    ):
         ax.plot(
-            group["minor_percent"],
-            group[mean_column],
+            summary["minor_percent"],
+            summary[column],
             color=color,
-            linewidth=1.25,
-            linestyle=linestyle,
-            marker="o",
-            markersize=2.7,
-            markeredgewidth=0,
+            marker=marker,
+            markersize=3.6,
+            linewidth=1.35,
+            label=label,
         )
-        ax.fill_between(
-            group["minor_percent"],
-            group[min_column],
-            group[max_column],
-            color=color,
-            alpha=0.10,
-            linewidth=0,
-        )
-    ax.axhline(threshold, color=INK, linewidth=0.8, linestyle=(0, (3, 2)))
-    ax.text(
-        49.2,
-        threshold * 1.08,
-        f"frozen threshold {threshold:g}",
-        ha="right",
-        va="bottom",
-        fontsize=5.5,
-        color=INK,
-    )
-    ax.set_yscale("log")
     ax.set_xlim(-1, 51)
-    ax.set_xticks(FRACTIONS)
-    ax.set_ylim(8, 12000)
+    ax.set_ylim(-1, 25.5)
+    ax.set_xticks([0, 5, 10, 20, 30, 50])
+    ax.set_yticks([0, 6, 12, 18, 24])
     ax.set_xlabel("Minor-source reads (%)")
-    ax.set_ylabel("Intermediate sites per callable Mb")
-    ax.set_title(title, loc="left", fontweight="bold", pad=3)
-    ax.grid(axis="y", which="major", color=GRID, linewidth=0.45)
+    ax.set_ylabel("Positive technical windows / 24")
+    ax.set_title("Clean-reference dilution stage", loc="left", fontweight="bold", pad=3)
+    ax.grid(axis="y", color=GRID, linewidth=0.45)
+    ax.legend(loc="lower right", fontsize=5.7, handlelength=1.7)
+    for row in summary.itertuples(index=False):
+        if row.minor_percent in (5, 10, 20):
+            ax.text(
+                row.minor_percent,
+                row.combined_positive + 0.8,
+                f"{row.combined_positive}/24",
+                ha="center",
+                va="bottom",
+                fontsize=5.3,
+                color=PRIMARY,
+            )
+    return summary
 
 
-def detection_rows(data: pd.DataFrame) -> pd.DataFrame:
-    ranked = data.copy()
-    ranked["direction_rank"] = direction_rank(ranked)
-    ranked["direction_label"] = ranked.apply(
-        lambda row: f"{row['pair_id'][-1]}  {row['major']} + {row['minor']}", axis=1
+def plot_complete_ten_percent(ax: plt.Axes, complete: pd.DataFrame) -> pd.DataFrame:
+    selected = complete.loc[
+        complete["minor_percent"].eq(10) & complete["total_pairs"].eq(2_000_000)
+    ].copy()
+    pair_rank = {pair: index for index, pair in enumerate(PAIR_ORDER)}
+    selected["pair_rank"] = selected["pair_id"].map(pair_rank)
+    selected["direction_rank"] = selected.apply(
+        lambda row: 0 if row["major"] == PAIR_SAMPLES[row["pair_id"]][0] else 1,
+        axis=1,
     )
-    return ranked.sort_values(["pair_id", "direction_rank", "minor_percent"])
-
-
-def plot_detection_heatmap(ax: plt.Axes, data: pd.DataFrame) -> None:
-    ordered = detection_rows(data)
-    labels = ordered[["pair_id", "direction_rank", "direction_label"]].drop_duplicates()["direction_label"].tolist()
-    matrix = np.full((len(labels), len(FRACTIONS)), np.nan)
-    for row_index, label in enumerate(labels):
-        subset = ordered.loc[ordered["direction_label"].eq(label)].set_index("minor_percent")
-        for column_index, fraction in enumerate(FRACTIONS):
-            matrix[row_index, column_index] = float(subset.loc[fraction, "combined_detection_rate"])
-    cmap = mpl.colors.ListedColormap(["#EEEEEE", "#3E7E6B"])
-    ax.imshow(matrix, aspect="auto", interpolation="none", cmap=cmap, vmin=0, vmax=1)
-    ax.set_xticks(np.arange(len(FRACTIONS)))
-    ax.set_xticklabels(FRACTIONS)
-    ax.set_yticks(np.arange(len(labels)))
-    ax.set_yticklabels(labels)
-    ax.set_xlabel("Minor-source reads (%)")
-    ax.set_title("Combined detection across three read windows", loc="left", fontweight="bold", pad=3)
-    ax.tick_params(length=0)
-    for row_index in range(matrix.shape[0]):
-        for column_index in range(matrix.shape[1]):
-            value = matrix[row_index, column_index]
+    selected = selected.sort_values(["pair_rank", "direction_rank"]).reset_index(drop=True)
+    if selected.shape[0] != 8:
+        raise ValueError(f"Expected eight complete 10% conditions; found {selected.shape[0]}")
+    ratios = np.column_stack(
+        [
+            selected["strict_burden_20_80_per_mbp"] / PRIMARY_THRESHOLD,
+            selected["meta_burden_20_80_per_mbp"] / PRIMARY_THRESHOLD,
+            selected["strict_burden_10_90_per_mbp"] / AUXILIARY_THRESHOLD,
+            selected["meta_burden_10_90_per_mbp"] / AUXILIARY_THRESHOLD,
+        ]
+    )
+    values = np.log2(np.clip(ratios, 0.125, 8.0))
+    cmap = mpl.colors.LinearSegmentedColormap.from_list(
+        "threshold_ratio", ["#496E88", "#F7F7F7", "#B96346"]
+    )
+    norm = mpl.colors.TwoSlopeNorm(vmin=-3, vcenter=0, vmax=3)
+    ax.imshow(values, aspect="auto", cmap=cmap, norm=norm, interpolation="none")
+    ax.set_xticks(np.arange(4))
+    ax.set_xticklabels(
+        ["Strict\nprimary", "Meta\nprimary", "Strict\nauxiliary", "Meta\nauxiliary"]
+    )
+    ax.set_yticks(np.arange(selected.shape[0]))
+    ax.set_yticklabels([direction_label(row) for _, row in selected.iterrows()])
+    ax.tick_params(axis="x", length=0)
+    ax.tick_params(axis="y", length=0, pad=2, labelsize=5.7)
+    ax.set_title("Complete 10% reconstruction", loc="left", fontweight="bold", pad=3)
+    for row_index in range(ratios.shape[0]):
+        for column_index in range(ratios.shape[1]):
+            value = ratios[row_index, column_index]
+            color = "white" if abs(values[row_index, column_index]) > 1.5 else INK
             ax.text(
                 column_index,
                 row_index,
-                f"{int(round(value * 3))}/3",
+                f"{value:.1f}x",
                 ha="center",
                 va="center",
-                fontsize=5.4,
-                color="white" if value >= 0.67 else MID,
-                fontweight="bold" if value >= 0.67 else "normal",
+                fontsize=5.3,
+                color=color,
             )
+    for boundary in (1.5,):
+        ax.axvline(boundary, color="white", linewidth=1.7)
+    for boundary in (1.5, 3.5, 5.5):
+        ax.axhline(boundary, color="white", linewidth=1.5)
+    failed_rows = [
+        index
+        for index, row in selected.iterrows()
+        if not truth(row["prespecified_rule_satisfied"])
+    ]
+    for row_index in failed_rows:
+        ax.add_patch(
+            mpl.patches.Rectangle(
+                (-0.5, row_index - 0.5),
+                4,
+                1,
+                fill=False,
+                edgecolor="#B33A3A",
+                linewidth=1.15,
+                clip_on=False,
+            )
+        )
     for spine in ax.spines.values():
         spine.set_visible(False)
-    ax.axhline(3.5, color="white", linewidth=2.0)
     ax.text(
-        0.0,
-        -0.18,
-        "Cells show positive read windows/3; thresholds frozen before C/D validation.",
+        1,
+        -0.16,
+        "Cell values are burden / prespecified threshold; values >1 are positive",
         transform=ax.transAxes,
-        ha="left",
+        ha="right",
         va="top",
-        fontsize=5.7,
+        fontsize=5.6,
         color=MID,
     )
-
-
-def stage2_label(row: pd.Series) -> str:
-    suffix = "cal" if row["pair_id"] in {"pairA", "pairB"} else "val"
-    return f"{row['pair_id'][-1]} {row['major']}\n{int(row['minor_percent'])}% {suffix}"
-
-
-def plot_stage2(ax: plt.Axes, data: pd.DataFrame) -> None:
-    ordered = data.copy()
-    ordered["pair_rank"] = ordered["pair_id"].map({item: index for index, item in enumerate(PAIR_ORDER)})
-    ordered["direction_rank"] = direction_rank(ordered)
-    ordered = ordered.sort_values(["pair_rank", "minor_percent", "direction_rank"]).reset_index(drop=True)
-    x = np.arange(len(ordered))
-    for route, offset, marker, label in (
-        ("strict", -0.13, "o", "Strict route"),
-        ("meta", 0.13, "s", "Meta route"),
-    ):
-        values = ordered[f"{route}_burden_20_80_per_mbp"].astype(float)
-        colors = [PAIR_COLORS[item] for item in ordered["pair_id"]]
-        ax.scatter(
-            x + offset,
-            values,
-            s=20,
-            marker=marker,
-            facecolors=colors if route == "strict" else "white",
-            edgecolors=colors,
-            linewidths=0.8,
-            label=label,
-            zorder=3,
+    if failed_rows:
+        ax.text(
+            0,
+            -0.16,
+            "Red outline: prespecified expectation not met",
+            transform=ax.transAxes,
+            ha="left",
+            va="top",
+            fontsize=5.6,
+            color="#B33A3A",
         )
-    ax.axhline(PRIMARY_THRESHOLD, color=INK, linewidth=0.8, linestyle=(0, (3, 2)))
-    ax.text(
-        len(ordered) - 0.6,
-        PRIMARY_THRESHOLD * 1.08,
-        "161.8",
-        ha="right",
-        va="bottom",
-        fontsize=5.5,
-        color=INK,
+    return selected
+
+
+def truth(value: object) -> bool:
+    return value is True or str(value).strip().lower() == "true"
+
+
+def classify_condition(row: pd.Series) -> int:
+    if truth(row["either_route_primary_positive"]):
+        return 2
+    if truth(row["either_route_auxiliary_positive"]):
+        return 1
+    return 0
+
+
+def plot_depth_matrix(ax: plt.Axes, complete: pd.DataFrame) -> pd.DataFrame:
+    selected = complete.loc[complete["pair_id"].isin(["pairA", "pairD"])].copy()
+    pair_rank = {"pairA": 0, "pairD": 1}
+    selected["pair_rank"] = selected["pair_id"].map(pair_rank)
+    selected["direction_rank"] = selected.apply(
+        lambda row: 0 if row["major"] == PAIR_SAMPLES[row["pair_id"]][0] else 1,
+        axis=1,
     )
-    ax.set_yscale("log")
-    ax.set_ylim(8, 12000)
-    ax.set_xlim(-0.7, len(ordered) - 0.3)
-    ax.set_xticks(x)
-    ax.set_xticklabels([stage2_label(row) for _, row in ordered.iterrows()], rotation=45, ha="right")
-    ax.set_ylabel("20-80% sites per callable Mb")
-    ax.set_title("Complete two-route reconstructions", loc="left", fontweight="bold", pad=3)
-    ax.grid(axis="y", which="major", color=GRID, linewidth=0.45)
-    ax.legend(loc="upper left", fontsize=5.8, ncol=2, handletextpad=0.4, columnspacing=0.8)
-    ax.text(
-        1.0,
-        -0.25,
-        "Seed 202; A/B route-shape checks, C/D untouched operating-point checks",
-        transform=ax.transAxes,
-        ha="right",
-        va="top",
+    row_keys = (
+        selected[["pair_id", "major", "minor", "pair_rank", "direction_rank", "minor_percent"]]
+        .drop_duplicates()
+        .sort_values(["pair_rank", "direction_rank", "minor_percent"])
+        .reset_index(drop=True)
+    )
+    if row_keys.shape[0] != 12:
+        raise ValueError(f"Expected 12 depth-series rows; found {row_keys.shape[0]}")
+    depths = [1_000_000, 2_000_000, 4_000_000]
+    matrix = np.full((row_keys.shape[0], len(depths)), np.nan)
+    expectation_met = np.full((row_keys.shape[0], len(depths)), True, dtype=bool)
+    for row_index, key in row_keys.iterrows():
+        subset = selected.loc[
+            selected["pair_id"].eq(key["pair_id"])
+            & selected["major"].eq(key["major"])
+            & selected["minor"].eq(key["minor"])
+            & selected["minor_percent"].eq(key["minor_percent"])
+        ].set_index("total_pairs")
+        for column_index, depth in enumerate(depths):
+            matrix[row_index, column_index] = classify_condition(subset.loc[depth])
+            expectation_met[row_index, column_index] = truth(
+                subset.loc[depth, "prespecified_rule_satisfied"]
+            )
+    cmap = mpl.colors.ListedColormap([NEGATIVE, AUXILIARY, PRIMARY])
+    ax.imshow(matrix, aspect="auto", interpolation="none", cmap=cmap, vmin=-0.5, vmax=2.5)
+    ax.set_xticks(np.arange(len(depths)))
+    ax.set_xticklabels(["1 million", "2 million", "4 million"])
+    labels = [
+        f"{row.pair_id[-1]}  {row.major} + {int(row.minor_percent)}% {row.minor}"
+        for row in row_keys.itertuples(index=False)
+    ]
+    ax.set_yticks(np.arange(len(labels)))
+    ax.set_yticklabels(labels)
+    ax.tick_params(length=0)
+    ax.set_title(
+        "Depth sensitivity of the complete two-route rule",
+        loc="left",
+        fontweight="bold",
+        pad=3,
+    )
+    symbols = {0: "-", 1: "A", 2: "P"}
+    for row_index in range(matrix.shape[0]):
+        for column_index in range(matrix.shape[1]):
+            state = int(matrix[row_index, column_index])
+            ax.text(
+                column_index,
+                row_index,
+                symbols[state],
+                ha="center",
+                va="center",
+                fontsize=6,
+                fontweight="bold",
+                color="white" if state == 2 else INK,
+            )
+            if not expectation_met[row_index, column_index]:
+                ax.add_patch(
+                    mpl.patches.Rectangle(
+                        (column_index - 0.5, row_index - 0.5),
+                        1,
+                        1,
+                        fill=False,
+                        edgecolor="#B33A3A",
+                        linewidth=1.15,
+                    )
+                )
+    for boundary in (2.5, 5.5, 8.5):
+        ax.axhline(boundary, color="white", linewidth=1.6)
+    for spine in ax.spines.values():
+        spine.set_visible(False)
+    legend = [
+        mpl.patches.Patch(facecolor=NEGATIVE, label="-  neither rule positive"),
+        mpl.patches.Patch(facecolor=AUXILIARY, label="A  auxiliary-only positive"),
+        mpl.patches.Patch(facecolor=PRIMARY, label="P  primary positive"),
+    ]
+    if not expectation_met.all():
+        legend.append(
+            mpl.patches.Patch(
+                facecolor="white",
+                edgecolor="#B33A3A",
+                label="Prespecified expectation not met",
+            )
+        )
+    ax.legend(
+        handles=legend,
+        loc="lower center",
+        bbox_to_anchor=(0.5, -0.20),
+        ncol=len(legend),
         fontsize=5.7,
-        color=MID,
+        handlelength=1.2,
+        columnspacing=1.1,
     )
+    return row_keys
 
 
-def write_source_data(output: Path, aggregate: pd.DataFrame, stage2: pd.DataFrame, pair_ani: pd.DataFrame) -> None:
+def write_source_data(
+    output: Path,
+    stage1: pd.DataFrame,
+    complete: pd.DataFrame,
+    pair_ani: pd.DataFrame,
+    stage1_summary: pd.DataFrame,
+    ten_percent: pd.DataFrame,
+) -> None:
     source = output / "source_data"
     source.mkdir(parents=True, exist_ok=True)
-    aggregate.to_csv(source / "Figure4_stage1_dilution_aggregate.tsv", sep="\t", index=False)
-    stage2.to_csv(source / "Figure4_stage2_selected_two_route.tsv", sep="\t", index=False)
+    stage1.to_csv(source / "Figure4_stage1_technical_windows.tsv", sep="\t", index=False)
+    stage1_summary.to_csv(
+        source / "Figure4_stage1_detection_summary.tsv", sep="\t", index=False
+    )
+    complete.to_csv(source / "Figure4_complete_40_conditions.tsv", sep="\t", index=False)
+    ten_percent.to_csv(
+        source / "Figure4_complete_10_percent_conditions.tsv", sep="\t", index=False
+    )
     pair_ani.to_csv(source / "Figure4_source_pair_ani.tsv", sep="\t", index=False)
 
 
 def main() -> None:
     args = parse_args()
     project = args.project_root.resolve()
-    aggregate, stage2, pair_ani = load_inputs(project)
-    output = project / "results" / "figures"
-    output.mkdir(parents=True, exist_ok=True)
-    write_source_data(output, aggregate, stage2, pair_ani)
-
+    stage1, complete, ani = read_inputs(project)
+    pair_ani = pair_ani_summary(ani)
     set_style()
     width_inches = 183 / 25.4
-    height_inches = 170 / 25.4
+    height_inches = 151 / 25.4
     figure = plt.figure(figsize=(width_inches, height_inches), facecolor="white")
     grid = figure.add_gridspec(
         2,
-        6,
-        height_ratios=[1.0, 1.12],
-        width_ratios=[0.95, 0.95, 1.25, 1.25, 1.25, 1.25],
-        left=0.125,
+        8,
+        height_ratios=[0.95, 1.28],
+        left=0.115,
         right=0.985,
-        top=0.955,
-        bottom=0.15,
-        wspace=1.05,
-        hspace=0.68,
+        top=0.965,
+        bottom=0.135,
+        wspace=1.35,
+        hspace=0.56,
     )
     ax_a = figure.add_subplot(grid[0, 0:2])
-    ax_b = figure.add_subplot(grid[0, 2:4])
-    ax_c = figure.add_subplot(grid[0, 4:6])
-    ax_d = figure.add_subplot(grid[1, 0:3])
-    ax_e = figure.add_subplot(grid[1, 3:6])
+    ax_b = figure.add_subplot(grid[0, 2:5])
+    ax_c = figure.add_subplot(grid[0, 5:8])
+    ax_d = figure.add_subplot(grid[1, 1:7])
 
     plot_pair_ani(ax_a, pair_ani)
-    plot_dilution_curves(
-        ax_b,
-        aggregate,
-        "burden_20_80_mean",
-        "burden_20_80_min",
-        "burden_20_80_max",
-        PRIMARY_THRESHOLD,
-        "Primary 20-80% burden",
-    )
-    plot_dilution_curves(
-        ax_c,
-        aggregate,
-        "burden_10_90_mean",
-        "burden_10_90_min",
-        "burden_10_90_max",
-        AUXILIARY_THRESHOLD,
-        "Auxiliary 10-90% burden",
-    )
-    plot_detection_heatmap(ax_d, aggregate)
-    plot_stage2(ax_e, stage2)
-
-    for axis, label in zip([ax_a, ax_b, ax_c, ax_d, ax_e], "abcde"):
+    stage1_summary = plot_stage1_detection(ax_b, stage1)
+    ten_percent = plot_complete_ten_percent(ax_c, complete)
+    plot_depth_matrix(ax_d, complete)
+    for axis, label in zip((ax_a, ax_b, ax_c, ax_d), "abcd"):
         panel_label(axis, label)
 
-    handles = [
-        mpl.lines.Line2D([], [], color=PAIR_COLORS[pair], marker="o", linewidth=1.2, markersize=3, label=PAIR_LABELS[pair])
-        for pair in PAIR_ORDER
-    ]
-    figure.legend(
-        handles=handles,
-        loc="lower center",
-        bbox_to_anchor=(0.53, 0.018),
-        ncol=4,
-        fontsize=6,
-        handlelength=1.6,
-        columnspacing=1.2,
+    output = (
+        project
+        / "analysis_global_mac_upgrade/results/26_review_resolution_figures"
     )
-
-    stem = output / "Figure4_nearMAC_dilution_benchmark"
+    output.mkdir(parents=True, exist_ok=True)
+    write_source_data(output, stage1, complete, pair_ani, stage1_summary, ten_percent)
+    stem = output / "Figure4_nearMAC_expanded_benchmark"
     figure.savefig(f"{stem}.svg", facecolor="white")
     figure.savefig(f"{stem}.pdf", facecolor="white")
     figure.savefig(f"{stem}.png", dpi=300, facecolor="white")
-    figure.savefig(f"{stem}.tiff", dpi=600, facecolor="white", pil_kwargs={"compression": "tiff_lzw"})
+    figure.savefig(
+        f"{stem}.tiff",
+        dpi=600,
+        facecolor="white",
+        pil_kwargs={"compression": "tiff_lzw"},
+    )
     plt.close(figure)
     print(stem)
 

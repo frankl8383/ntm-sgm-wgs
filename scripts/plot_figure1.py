@@ -318,7 +318,7 @@ def plot_mixture_burden(
     )
     ax.set_yscale("log")
     ax.set_ylim(10, 6000)
-    ax.set_ylabel("Intermediate-frequency sites per Mb")
+    ax.set_ylabel("Intermediate-frequency sites per callable Mb")
     ax.set_xticks(x)
     ax.set_xticklabels(outcomes.sample_id, rotation=55, ha="right")
     ax.spines[["top", "right"]].set_visible(False)

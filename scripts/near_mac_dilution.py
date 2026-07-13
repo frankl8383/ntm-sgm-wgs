@@ -17,6 +17,7 @@ import random
 import shutil
 import subprocess
 import sys
+import threading
 import zipfile
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
@@ -65,6 +66,11 @@ def pair_key(header: str) -> str:
 
 def stable_sample_seed(sample: str, seed: int) -> int:
     digest = hashlib.sha256(f"{sample}:{seed}".encode()).digest()
+    return int.from_bytes(digest[:8], "big")
+
+
+def stable_nested_seed(sample: str, seed: int) -> int:
+    digest = hashlib.sha256(f"{sample}:{seed}:nested-depth-window".encode()).digest()
     return int.from_bytes(digest[:8], "big")
 
 
@@ -164,6 +170,109 @@ def prepare_windows(
     return outputs
 
 
+def copy_seeded_max_window(
+    r1: Path,
+    r2: Path,
+    out1: Path,
+    out2: Path,
+    total: int,
+    maximum_pairs: int,
+    sample: str,
+    seed: int,
+) -> None:
+    if total < maximum_pairs:
+        raise ValueError(f"{sample} has only {total} pairs; {maximum_pairs} requested")
+    rng = random.Random(stable_nested_seed(sample, seed))
+    start = rng.randint(0, total - maximum_pairs)
+    out1.parent.mkdir(parents=True, exist_ok=True)
+    temporary_suffix = f".tmp.{os.getpid()}.{threading.get_ident()}"
+    temporary1 = out1.with_name(out1.name + temporary_suffix)
+    temporary2 = out2.with_name(out2.name + temporary_suffix)
+    copied = 0
+    try:
+        with gzip.open(r1, "rt") as h1, gzip.open(r2, "rt") as h2, gzip.open(
+            temporary1, "wt", compresslevel=4
+        ) as o1, gzip.open(temporary2, "wt", compresslevel=4) as o2:
+            for index in range(total):
+                rec1 = [h1.readline() for _ in range(4)]
+                rec2 = [h2.readline() for _ in range(4)]
+                if not rec1[0] or not rec2[0]:
+                    raise ValueError(f"Unexpected FASTQ end for {sample}")
+                if pair_key(rec1[0]) != pair_key(rec2[0]):
+                    raise ValueError(f"Pair mismatch for {sample} at record {index + 1}")
+                if start <= index < start + maximum_pairs:
+                    o1.writelines(rec1)
+                    o2.writelines(rec2)
+                    copied += 1
+                if copied == maximum_pairs:
+                    break
+        if copied != maximum_pairs:
+            raise ValueError(f"{sample}: copied {copied}/{maximum_pairs} pairs")
+        os.replace(temporary1, out1)
+        os.replace(temporary2, out2)
+        manifest = out1.parent / "window.tsv"
+        temporary_manifest = manifest.with_name(manifest.name + temporary_suffix)
+        temporary_manifest.write_text(
+            "sample_id\tseed\ttotal_source_pairs\twindow_start_zero_based\t"
+            "maximum_window_pairs\tnesting_policy\n"
+            f"{sample}\t{seed}\t{total}\t{start}\t{maximum_pairs}\t"
+            "depth_tiers_are_prefixes_of_this_window\n",
+            encoding="utf-8",
+        )
+        os.replace(temporary_manifest, manifest)
+    finally:
+        temporary1.unlink(missing_ok=True)
+        temporary2.unlink(missing_ok=True)
+
+
+def prepare_nested_windows(
+    project: Path,
+    conditions: list[dict[str, object]],
+    cache: Path,
+    workers: int,
+    force: bool,
+) -> dict[tuple[str, int], tuple[Path, Path]]:
+    maxima: dict[tuple[str, int], int] = {}
+    for row in conditions:
+        count = int(row["total_pairs"])
+        seed = int(row["seed"])
+        for sample in (str(row["major"]), str(row["minor"])):
+            maxima[(sample, seed)] = max(maxima.get((sample, seed), 0), count)
+    outputs: dict[tuple[str, int], tuple[Path, Path]] = {}
+    futures = {}
+    with ThreadPoolExecutor(max_workers=max(1, min(workers, 2))) as pool:
+        for (sample, seed), count in sorted(maxima.items()):
+            source1 = project / "data" / "clean_fastq" / f"{sample}_R1.fastq.gz"
+            source2 = project / "data" / "clean_fastq" / f"{sample}_R2.fastq.gz"
+            total = total_sequences(project, sample, source1)
+            outdir = cache / sample / f"seed_{seed}" / f"max_{count}"
+            out1 = outdir / f"{sample}.R1.max_window.fastq.gz"
+            out2 = outdir / f"{sample}.R2.max_window.fastq.gz"
+            outputs[(sample, seed)] = (out1, out2)
+            if force or not out1.exists() or not out2.exists():
+                futures[
+                    pool.submit(
+                        copy_seeded_max_window,
+                        source1,
+                        source2,
+                        out1,
+                        out2,
+                        total,
+                        count,
+                        sample,
+                        seed,
+                    )
+                ] = (sample, seed, count)
+        for future in as_completed(futures):
+            sample, seed, count = futures[future]
+            future.result()
+            print(
+                f"window_completed\t{sample}\tseed={seed}\tpairs={count}",
+                flush=True,
+            )
+    return outputs
+
+
 def prefixed_record(record: list[str], prefix: str) -> list[str]:
     body = record[0].rstrip()[1:]
     record[0] = f"@{prefix}|{body}\n"
@@ -195,9 +304,10 @@ def write_mixture(
     output2: Path,
     major: str,
     minor: str,
+    total_pairs: int = TOTAL_PAIRS,
 ) -> None:
-    minor_count = round(TOTAL_PAIRS * minor_percent / 100)
-    major_count = TOTAL_PAIRS - minor_count
+    minor_count = round(total_pairs * minor_percent / 100)
+    major_count = total_pairs - minor_count
     output1.parent.mkdir(parents=True, exist_ok=True)
     with gzip.open(output1, "wt", compresslevel=4) as out1, gzip.open(
         output2, "wt", compresslevel=4
