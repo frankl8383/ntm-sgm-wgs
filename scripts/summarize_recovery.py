@@ -246,7 +246,7 @@ def main() -> None:
     report = [
         "# Full rescue extension",
         "",
-        f"Ten samples were processed with the two locked rescue routes. Residual-mixture review used the same deterministic two-million-pair depth as the synthetic benchmark; the fixed threshold was {mixture_threshold:.1f} intermediate-frequency sites per Mb callable sequence.",
+        f"Ten samples were processed with the two locked rescue routes. Residual-mixture review used the same deterministic two-million-pair depth as the synthetic benchmark; the fixed threshold was {mixture_threshold:.1f} intermediate-frequency sites per callable Mb.",
         "",
         f"- Rescued interpretable: {rescued_count}",
         f"- Unrecoverable residual MAC mixture: {counts['unrecoverable_residual_mac_mixture']}",

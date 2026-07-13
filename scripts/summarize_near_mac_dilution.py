@@ -101,7 +101,7 @@ def main() -> None:
     aggregate = (
         rows.groupby(["pair_id", "major", "minor", "minor_percent"])
         .agg(
-            replicates=("seed", "size"),
+            technical_windows=("seed", "size"),
             median_depth=("median_effective_depth", "median"),
             burden_10_90_mean=("mixed_sites_10_90_per_mbp_callable", "mean"),
             burden_10_90_min=("mixed_sites_10_90_per_mbp_callable", "min"),
@@ -121,21 +121,21 @@ def main() -> None:
         "# Near-MAC dilution summary",
         "",
         f"- Completed conditions: {len(rows)}.",
-        f"- Primary frozen 20-80% threshold: {PRIMARY_20_80_THRESHOLD:.1f} sites/Mb.",
-        f"- Secondary 10-90% threshold: {secondary_threshold:.2f} sites/Mb.",
+        f"- Primary frozen 20-80% threshold: {PRIMARY_20_80_THRESHOLD:.1f} sites per callable Mb.",
+        f"- Secondary 10-90% threshold: {secondary_threshold:.2f} sites per callable Mb.",
         f"- Secondary threshold status: {threshold_status}.",
         "",
     ]
     for row in aggregate.itertuples(index=False):
         report.append(
             f"- {row.pair_id} {row.major} major/{row.minor} minor, {row.minor_percent}%: "
-            f"n={row.replicates}, 10-90 burden mean {row.burden_10_90_mean:.1f}, "
+            f"technical windows={row.technical_windows}, 10-90 burden mean {row.burden_10_90_mean:.1f}, "
             f"20-80 burden mean {row.burden_20_80_mean:.1f}, combined detection {row.combined_detection_rate:.0%}."
         )
     report.extend(
         [
             "",
-            "Stage 1 maps mixtures to the clean major-source assembly. It calibrates the residual-mixture statistic but does not replace complete two-route reconstruction of selected conditions.",
+            "Stage 1 maps mixtures to the clean major-source assembly. The three seeded windows are deterministic technical challenges, not biological replicates. This stage calibrates the residual-mixture statistic but does not replace complete two-route reconstruction of selected conditions.",
         ]
     )
     (outdir / "nearmac_dilution_report.md").write_text(

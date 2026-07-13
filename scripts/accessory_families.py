@@ -208,7 +208,7 @@ def main() -> None:
         )
         row["public_discovery_candidate"] = public_candidate
         if direction == "MP_MIP_enriched":
-            replicated = (
+            directionally_concordant = (
                 float(row["local_mp_prevalence"]) >= 0.75
                 and float(row["local_tmi_prevalence"]) <= 0.25
             )
@@ -219,7 +219,7 @@ def main() -> None:
                 and float(row["local_tmi_rescued_prevalence"]) <= 0.50
             )
         elif direction == "TMI_enriched":
-            replicated = (
+            directionally_concordant = (
                 float(row["local_tmi_prevalence"]) >= 0.75
                 and float(row["local_mp_prevalence"]) <= 0.25
             )
@@ -230,28 +230,36 @@ def main() -> None:
                 and float(row["local_mp_rescued_prevalence"]) <= 0.40
             )
         else:
-            replicated = False
+            directionally_concordant = False
             route_consistent = False
-        row["local_directional_replication"] = bool(public_candidate and replicated)
-        row["local_route_consistent"] = bool(public_candidate and replicated and route_consistent)
+        row["local_directional_concordance"] = bool(
+            public_candidate and directionally_concordant
+        )
+        row["local_route_consistent"] = bool(
+            public_candidate and directionally_concordant and route_consistent
+        )
 
     result = pd.DataFrame(rows)
     result = result.sort_values(
-        ["public_discovery_candidate", "local_directional_replication", "fisher_fdr"],
+        ["public_discovery_candidate", "local_directional_concordance", "fisher_fdr"],
         ascending=[False, False, True],
     )
     result.to_csv(output_dir / "all_cluster_lineage_statistics.tsv", sep="\t", index=False)
     candidates = result[result.public_discovery_candidate].copy()
     candidates.to_csv(output_dir / "public_discovery_candidates.tsv", sep="\t", index=False)
-    replicated = candidates[candidates.local_directional_replication].copy()
-    replicated.to_csv(output_dir / "public_candidates_replicated_locally.tsv", sep="\t", index=False)
-    robust = replicated[replicated.local_route_consistent].copy()
+    concordant = candidates[candidates.local_directional_concordance].copy()
+    concordant.to_csv(
+        output_dir / "public_candidates_with_local_directional_concordance.tsv",
+        sep="\t",
+        index=False,
+    )
+    robust = concordant[concordant.local_route_consistent].copy()
     robust.to_csv(output_dir / "public_candidates_route_robust.tsv", sep="\t", index=False)
 
     sequences = parse_fasta(Path(args.representative_fasta))
     write_fasta(
-        output_dir / "public_candidates_replicated_locally.faa",
-        list(replicated.cluster_id),
+        output_dir / "public_candidates_with_local_directional_concordance.faa",
+        list(concordant.cluster_id),
         sequences,
     )
     write_fasta(
@@ -270,7 +278,7 @@ def main() -> None:
             "local_mp_mip_n": len(groups["local_mp"]),
             "protein_clusters": result.shape[0],
             "public_discovery_candidates": candidates.shape[0],
-            "locally_replicated_candidates": replicated.shape[0],
+            "local_directionally_concordant_candidates": concordant.shape[0],
             "route_robust_candidates": robust.shape[0],
             "interpretation": "lineage-associated protein families; not phenotype, virulence, transmission, HGT or diagnostic markers",
         }
@@ -282,7 +290,7 @@ def main() -> None:
         f"Run: {args.run_label}",
         f"Protein clusters: {result.shape[0]}",
         f"Public discovery candidates: {candidates.shape[0]}",
-        f"Candidates replicated in local TMI versus MP-MIP genomes: {replicated.shape[0]}",
+        f"Candidates with the same direction in local TMI versus MP-MIP genomes: {concordant.shape[0]}",
         f"Candidates also consistent across direct and rescued local assemblies: {robust.shape[0]}",
         "",
         "Candidates were discovered in public genomes and evaluated in local genomes. They are lineage-associated protein families, not phenotype, virulence, transmission, HGT or diagnostic-marker claims.",
@@ -290,7 +298,7 @@ def main() -> None:
     (output_dir / "accessory_analysis_report.md").write_text("\n".join(report) + "\n")
     print(
         f"clusters={result.shape[0]} public_candidates={candidates.shape[0]} "
-        f"local_replicated={replicated.shape[0]} route_robust={robust.shape[0]}"
+        f"local_concordant={concordant.shape[0]} route_robust={robust.shape[0]}"
     )
 
 

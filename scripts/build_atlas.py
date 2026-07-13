@@ -139,21 +139,6 @@ def main() -> None:
             row["selection_score"] = f"{assembly_score(row):.6f}"
             flattened.append(row)
 
-    by_pair: dict[str, list[dict[str, object]]] = defaultdict(list)
-    for row in flattened:
-        by_pair[str(row["pair_key"])].append(row)
-    pair_selected: list[dict[str, object]] = []
-    for group in by_pair.values():
-        pair_selected.append(max(group, key=lambda row: float(row["selection_score"])))
-
-    by_sample: dict[str, list[dict[str, object]]] = defaultdict(list)
-    for row in pair_selected:
-        key = str(row["biosample"]) or f"no_biosample:{row['assembly_accession']}"
-        by_sample[key].append(row)
-    biosample_selected: list[dict[str, object]] = []
-    for group in by_sample.values():
-        biosample_selected.append(max(group, key=lambda row: float(row["selection_score"])))
-
     for row in flattened:
         length = int(row["total_length"])
         gc = float(row["gc_percent"])
@@ -177,17 +162,53 @@ def main() -> None:
         row["qc_pass"] = "true" if not failures else "false"
         row["qc_failure_reasons"] = ";".join(failures)
 
+    qc_candidates = [row for row in flattened if row["qc_pass"] == "true"]
+    by_pair: dict[str, list[dict[str, object]]] = defaultdict(list)
+    for row in qc_candidates:
+        by_pair[str(row["pair_key"])].append(row)
+    pair_selected: list[dict[str, object]] = []
+    pair_winner: dict[str, str] = {}
+    for key, group in by_pair.items():
+        winner = max(group, key=lambda row: float(row["selection_score"]))
+        pair_selected.append(winner)
+        pair_winner[key] = str(winner["assembly_accession"])
+
+    by_sample: dict[str, list[dict[str, object]]] = defaultdict(list)
+    for row in pair_selected:
+        key = str(row["biosample"]) or f"no_biosample:{row['assembly_accession']}"
+        by_sample[key].append(row)
+    biosample_selected: list[dict[str, object]] = []
+    biosample_winner: dict[str, str] = {}
+    for key, group in by_sample.items():
+        winner = max(group, key=lambda row: float(row["selection_score"]))
+        biosample_selected.append(winner)
+        biosample_winner[key] = str(winner["assembly_accession"])
+
     pair_accessions = {str(row["assembly_accession"]) for row in pair_selected}
     biosample_accessions = {str(row["assembly_accession"]) for row in biosample_selected}
     for row in flattened:
         accession = str(row["assembly_accession"])
+        pair_key = str(row["pair_key"])
+        biosample_key = str(row["biosample"]) or f"no_biosample:{accession}"
         row["selected_after_pair_dedup"] = "true" if accession in pair_accessions else "false"
         row["selected_after_biosample_dedup"] = "true" if accession in biosample_accessions else "false"
-        row["selected_for_download"] = (
-            "true"
-            if accession in biosample_accessions and row["qc_pass"] == "true"
-            else "false"
-        )
+        row["selected_for_download"] = "true" if accession in biosample_accessions else "false"
+        row["qc_first_pair_winner"] = pair_winner.get(pair_key, "")
+        row["qc_first_biosample_winner"] = biosample_winner.get(biosample_key, "")
+        if row["qc_pass"] != "true":
+            row["selection_decision"] = "excluded_qc"
+            row["selection_reason"] = row["qc_failure_reasons"]
+        elif accession not in pair_accessions:
+            row["selection_decision"] = "excluded_paired_accession_dedup"
+            row["selection_reason"] = f"pair_winner={pair_winner.get(pair_key, '')}"
+        elif accession not in biosample_accessions:
+            row["selection_decision"] = "excluded_biosample_dedup"
+            row["selection_reason"] = (
+                f"biosample_winner={biosample_winner.get(biosample_key, '')}"
+            )
+        else:
+            row["selection_decision"] = "selected_qc_first"
+            row["selection_reason"] = ""
 
     flattened.sort(key=lambda row: str(row["assembly_accession"]))
     selected = [row for row in flattened if row["selected_for_download"] == "true"]
@@ -204,8 +225,9 @@ def main() -> None:
         "# Current NCBI MAC atlas metadata",
         "",
         f"Raw current records: {len(flattened)}",
-        f"After paired-accession deduplication: {len(pair_selected)}",
-        f"After BioSample deduplication: {len(biosample_selected)}",
+        f"QC-pass records before deduplication: {len(qc_candidates)}",
+        f"After QC-first paired-accession deduplication: {len(pair_selected)}",
+        f"After QC-first BioSample deduplication: {len(biosample_selected)}",
         f"QC-selected for download: {len(selected)}",
         "",
         "## Current reporting species",
