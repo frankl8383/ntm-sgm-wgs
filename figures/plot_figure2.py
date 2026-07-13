@@ -198,6 +198,8 @@ ax_d.legend(handles=leg_g, loc="upper right", handletextpad=0.3, labelspacing=0.
 
 probs = fs.qa_report(fig)
 print("QA Figure 2:", probs)
+if probs:
+    raise RuntimeError(f"Figure 2 layout QA failed: {probs}")
 # Per-panel crops for perceptual QA review (opt-in): set QA_CROPS=1 to emit f2_*.png
 if os.environ.get("QA_CROPS"):
     paths = crop_panels(fig, {"a":ax_a,"b":ax_b,"c":ax_c,"d":ax_d}, prefix="f2")
