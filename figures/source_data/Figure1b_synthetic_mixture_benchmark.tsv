@@ -1,0 +1,5 @@
+benchmark	route	target_fraction	sensitivity_percent	precision_percent	background_pair_false_positive_rate	source_ani	source_fragment_recovery	benchmark_interpretation
+cross25	strict_paired_bait_recruitment_spades	0.25	88.5606	99.93545314823884	0.0001906666666666	99.9688	0.8909774436090225	cross_genus_recovery
+cross65	strict_paired_bait_recruitment_spades	0.65	88.5723846153846	99.98766914759945	0.0002028571428571	99.9796	0.8958109559613319	cross_genus_recovery
+cross95	strict_paired_bait_recruitment_spades	0.95	88.54973684210526	99.99869239634418	0.00022	99.9793	0.8963480128893663	cross_genus_recovery
+nearMAC50	strict_paired_bait_recruitment_spades	0.5	88.5557	47.22995855977898	0.989433	97.223	0.1761546723952739	failure_control

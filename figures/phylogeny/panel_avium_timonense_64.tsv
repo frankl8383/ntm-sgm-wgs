@@ -1,0 +1,65 @@
+tree_id	source	reporting_label	accessory_lineage	analysis_group	sample_label	recovered
+ANCHOR_GCF_002086775.1	anchor	anchor		other		False
+LOCAL_Ma5	local	Mycobacterium avium public-context group		M. avium	Ma5	True
+PUB_GCF_002089335.1	public	Mycobacterium avium subsp. hominissuis		M. avium		False
+PUB_GCF_002089855.1	public	Mycobacterium avium subsp. hominissuis		M. avium		False
+PUB_GCF_002089635.1	public	Mycobacterium avium subsp. hominissuis		M. avium		False
+PUB_GCF_002304065.2	public	Mycobacterium avium subsp. hominissuis		M. avium		False
+PUB_GCF_015708165.1	public	Mycobacterium avium		M. avium		False
+PUB_GCF_055386175.1	public	Mycobacterium avium		M. avium		False
+PUB_GCF_055794985.1	public	Mycobacterium avium subsp. hominissuis		M. avium		False
+PUB_GCF_001865635.4	public	Mycobacterium avium subsp. hominissuis		M. avium		False
+PUB_GCF_022175585.2	public	Mycobacterium avium subsp. hominissuis		M. avium		False
+PUB_GCF_002089615.1	public	Mycobacterium avium subsp. hominissuis		M. avium		False
+PUB_GCF_000390085.1	public	Mycobacterium avium subsp. paratuberculosis		M. avium		False
+PUB_GCF_002208705.2	public	Mycobacterium avium subsp. paratuberculosis		M. avium		False
+PUB_GCF_016749935.1	public	Mycobacterium avium subsp. paratuberculosis		M. avium		False
+PUB_GCF_003713045.1	public	Mycobacterium avium subsp. paratuberculosis		M. avium		False
+PUB_GCF_049810335.1	public	Mycobacterium avium subsp. paratuberculosis		M. avium		False
+PUB_GCF_043591295.1	public	Mycobacterium avium subsp. paratuberculosis		M. avium		False
+PUB_GCF_044336315.1	public	Mycobacterium avium subsp. paratuberculosis		M. avium		False
+PUB_GCF_044336305.1	public	Mycobacterium avium subsp. paratuberculosis		M. avium		False
+PUB_GCF_010723675.1	public	Mycobacterium timonense		M. timonense		False
+LOCAL_Ma9	local	Mycobacterium avium public-context group		M. avium	Ma9	False
+PUB_GCF_001610435.1	public	Mycobacterium avium subsp. hominissuis		M. avium		False
+PUB_GCF_002292445.1	public	Mycobacterium avium		M. avium		False
+PUB_GCF_030509695.1	public	Mycobacterium avium subsp. hominissuis		M. avium		False
+PUB_GCF_030509805.1	public	Mycobacterium avium subsp. hominissuis		M. avium		False
+PUB_GCF_056162605.1	public	Mycobacterium avium subsp. hominissuis		M. avium		False
+PUB_GCF_002292705.1	public	Mycobacterium avium		M. avium		False
+PUB_GCF_020217925.1	public	Mycobacterium avium		M. avium		False
+PUB_GCF_020217615.1	public	Mycobacterium avium		M. avium		False
+PUB_GCF_000174035.1	public	Mycobacterium avium subsp. avium		M. avium		False
+PUB_GCF_020735285.1	public	Mycobacterium avium subsp. avium		M. avium		False
+PUB_GCF_009741445.1	public	Mycobacterium avium subsp. avium		M. avium		False
+PUB_GCF_003640565.1	public	Mycobacterium avium		M. avium		False
+PUB_GCF_021183805.1	public	Mycobacterium avium subsp. avium		M. avium		False
+PUB_GCF_020735405.1	public	Mycobacterium avium subsp. avium		M. avium		False
+PUB_GCF_021183845.1	public	Mycobacterium avium subsp. avium		M. avium		False
+PUB_GCF_001683455.1	public	Mycobacterium avium		M. avium		False
+PUB_GCF_965280235.1	public	Mycobacterium avium subsp. silvaticum		M. avium		False
+PUB_GCF_000014985.1	public	Mycobacterium avium		M. avium		False
+PUB_GCF_057005225.1	public	Mycobacterium avium subsp. hominissuis		M. avium		False
+PUB_GCF_057005195.1	public	Mycobacterium avium subsp. hominissuis		M. avium		False
+PUB_GCF_057005235.1	public	Mycobacterium avium subsp. hominissuis		M. avium		False
+PUB_GCF_057005185.1	public	Mycobacterium avium subsp. hominissuis		M. avium		False
+PUB_GCF_055079265.1	public	Mycobacterium avium subsp. hominissuis		M. avium		False
+PUB_GCF_000655755.1	public	Mycobacterium avium		M. avium		False
+PUB_GCF_032907405.1	public	Mycobacterium avium		M. avium		False
+PUB_GCF_055795025.1	public	Mycobacterium avium subsp. avium		M. avium		False
+PUB_GCF_056355635.1	public	Mycobacterium avium subsp. hominissuis		M. avium		False
+PUB_GCF_054388815.1	public	Mycobacterium avium subsp. hominissuis		M. avium		False
+LOCAL_Mi18	local	Mycobacterium avium public-context group		M. avium	Mi18	False
+PUB_GCF_002086165.1	public	Mycobacterium bouchedurhonense		other		False
+PUB_GCF_025822125.1	public	Mycobacterium bouchedurhonense		other		False
+PUB_GCF_025821985.1	public	Mycobacterium timonense		M. timonense		False
+PUB_GCF_042658145.1	public	Mycobacterium bouchedurhonense		other		False
+PUB_GCF_002292475.1	public	Mycobacterium avium		M. avium		False
+PUB_GCF_002304125.1	public	Mycobacterium avium subsp. hominissuis		M. avium		False
+PUB_GCF_032907425.1	public	Mycobacterium avium subsp. hominissuis		M. avium		False
+PUB_GCF_054659095.1	public	Mycobacterium avium subsp. hominissuis		M. avium		False
+PUB_GCF_964205045.1	public	Mycobacterium avium subsp. hominissuis		M. avium		False
+PUB_GCF_032907705.1	public	Mycobacterium avium		M. avium		False
+PUB_GCF_964205035.1	public	Mycobacterium avium subsp. hominissuis		M. avium		False
+PUB_GCF_020054555.1	public	Mycobacterium avium subsp. hominissuis		M. avium		False
+PUB_GCF_055795005.1	public	Mycobacterium avium subsp. avium		M. avium		False
