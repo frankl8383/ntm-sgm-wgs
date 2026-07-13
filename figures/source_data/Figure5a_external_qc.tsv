@@ -1,0 +1,10 @@
+sample_id	run_accession	frozen_expected_lineage	genome_size_bp	contigs_ge_500_bp	n50_bp	gc_percent	checkm2_completeness	checkm2_contamination	length_4_0_to_7_5_mbp	gc_66_to_71_percent	contigs_le_500	n50_ge_20_kbp	checkm2_completeness_ge_90	checkm2_contamination_le_5	external_qc_pass	qc_failure_reasons
+mv13	SRR24904290	TMI	5430122	30	396791	68.05092040289334	100.0	0.28	True	True	True	True	True	True	True	
+mv17	SRR24904182	TMI	5702156	650	182499	68.06623670064445	100.0	3.39	True	True	False	True	True	True	False	contigs_le_500
+mv56	SRR24904128	TMI	5404317	28	461911	68.07805685713846	100.0	0.3	True	True	True	True	True	True	True	
+mv8	SRR24904206	MP_MIP	5432445	79	159234	68.37551047456532	100.0	0.15	True	True	True	True	True	True	True	
+mv51	SRR24904134	MP_MIP	5611433	53	282487	67.92227582508782	100.0	0.33	True	True	True	True	True	True	True	
+mv67	SRR24904212	MP_MIP	5258991	71	282994	69.0799242668413	100.0	0.04	True	True	True	True	True	True	True	
+mv71	SRR24904209	MP_MIP	5136158	31	475639	68.33265253911581	100.0	0.3	True	True	True	True	True	True	True	
+mv65	SRR24904214	MP_MIP	5258486	70	282994	69.07815291321495	100.0	0.04	True	True	True	True	True	True	True	
+mv91	SRR24904187	MP_MIP	5468447	87	347926	68.81886210106818	100.0	0.08	True	True	True	True	True	True	True	

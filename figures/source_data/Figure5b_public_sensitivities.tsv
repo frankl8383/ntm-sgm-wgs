@@ -1,0 +1,33 @@
+dataset	block_id	lineage	present	total	prevalence
+Separate public set	TMI_aromatic_catabolism_associated_block	TMI	27	32	0.84375
+Separate public set	TMI_aromatic_catabolism_associated_block	MP-MIP	5	15	0.3333333333333333
+Separate public set	TMI_methyltransferase_hydrolase_cupin_block	TMI	27	32	0.84375
+Separate public set	TMI_methyltransferase_hydrolase_cupin_block	MP-MIP	6	15	0.4
+Separate public set	MP_MIP_nitrogen_redox_associated_block	TMI	1	32	0.03125
+Separate public set	MP_MIP_nitrogen_redox_associated_block	MP-MIP	8	15	0.5333333333333333
+Separate public set	MP_MIP_oxidoreductase_associated_block	TMI	0	32	0.0
+Separate public set	MP_MIP_oxidoreductase_associated_block	MP-MIP	8	15	0.5333333333333333
+Complete genomes	TMI_aromatic_catabolism_associated_block	TMI	22	26	0.8461538461538461
+Complete genomes	TMI_aromatic_catabolism_associated_block	MP-MIP	0	10	0.0
+Complete genomes	TMI_methyltransferase_hydrolase_cupin_block	TMI	23	26	0.8846153846153846
+Complete genomes	TMI_methyltransferase_hydrolase_cupin_block	MP-MIP	0	10	0.0
+Complete genomes	MP_MIP_nitrogen_redox_associated_block	TMI	0	26	0.0
+Complete genomes	MP_MIP_nitrogen_redox_associated_block	MP-MIP	10	10	1.0
+Complete genomes	MP_MIP_oxidoreductase_associated_block	TMI	0	26	0.0
+Complete genomes	MP_MIP_oxidoreductase_associated_block	MP-MIP	10	10	1.0
+One per project	TMI_aromatic_catabolism_associated_block	TMI	16	16	1.0
+One per project	TMI_aromatic_catabolism_associated_block	MP-MIP	1	12	0.08333333333333333
+One per project	TMI_methyltransferase_hydrolase_cupin_block	TMI	14	16	0.875
+One per project	TMI_methyltransferase_hydrolase_cupin_block	MP-MIP	2	12	0.16666666666666666
+One per project	MP_MIP_nitrogen_redox_associated_block	TMI	0	16	0.0
+One per project	MP_MIP_nitrogen_redox_associated_block	MP-MIP	9	12	0.75
+One per project	MP_MIP_oxidoreductase_associated_block	TMI	0	16	0.0
+One per project	MP_MIP_oxidoreductase_associated_block	MP-MIP	9	12	0.75
+Near-clone reduced	TMI_aromatic_catabolism_associated_block	TMI	47	55	0.8545454545454545
+Near-clone reduced	TMI_aromatic_catabolism_associated_block	MP-MIP	2	35	0.05714285714285714
+Near-clone reduced	TMI_methyltransferase_hydrolase_cupin_block	TMI	47	55	0.8545454545454545
+Near-clone reduced	TMI_methyltransferase_hydrolase_cupin_block	MP-MIP	2	35	0.05714285714285714
+Near-clone reduced	MP_MIP_nitrogen_redox_associated_block	TMI	1	55	0.01818181818181818
+Near-clone reduced	MP_MIP_nitrogen_redox_associated_block	MP-MIP	32	35	0.9142857142857143
+Near-clone reduced	MP_MIP_oxidoreductase_associated_block	TMI	0	55	0.0
+Near-clone reduced	MP_MIP_oxidoreductase_associated_block	MP-MIP	32	35	0.9142857142857143

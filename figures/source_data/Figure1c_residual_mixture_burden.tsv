@@ -1,0 +1,12 @@
+sample_id	strict_mixed_sites_per_mbp	meta_mixed_sites_per_mbp	benchmark_derived_mixture_threshold	reporting_name_or_anchor	final_rescue_decision	recovered
+Mi31	18.7389979368174	16.98895019802509	161.826223	Mycobacterium intracellulare	rescued_interpretable	True
+Ma49	20.560759119042643	19.579073188707955	161.826223	Mycobacterium paraintracellulare	rescued_interpretable	True
+Mi3	24.98103939110215	19.97633483129985	161.826223	Mycobacterium paraintracellulare	rescued_interpretable	True
+Mi32	37.226577943958915	31.246394646771527	161.826223	Mycobacterium intracellulare	rescued_interpretable_type_boundary_caution	True
+Mi15	30.56727467573216	33.53287389304091	161.826223	Mycobacterium paraintracellulare	rescued_interpretable	True
+Mi19	28.750605042698588	35.49532227697635	161.826223	Mycobacterium paraintracellulare	rescued_interpretable	True
+Mi30	27.074197806023044	47.764155850828125	161.826223	Mycobacterium intracellulare	rescued_interpretable	True
+Ma5	55.426441498609165	68.36433940976981	161.826223	Mycobacterium timonense	rescued_interpretable	True
+Mix16	637.5869271124758	626.514903421933	161.826223	Mycobacterium paraintracellulare	unrecoverable_residual_mac_mixture	False
+Mi39	1318.0518598900962	1449.081402378524	161.826223	Mycobacterium chimaera	unrecoverable_residual_mac_mixture	False
+Ma53	2969.2701503747717	3702.0572154242673	161.826223	Mycobacterium paraintracellulare	unrecoverable_residual_mac_mixture	False

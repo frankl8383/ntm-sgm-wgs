@@ -1,0 +1,94 @@
+{
+  "plot_figure1.py": {
+    "figure": "Figure 1",
+    "inputs": [
+      "source_data/Figure1a_cohort_flow.tsv",
+      "source_data/Figure1b_synthetic_mixture_benchmark.tsv",
+      "source_data/Figure1c_residual_mixture_burden.tsv"
+    ],
+    "outputs": [
+      "Figure_1.pdf",
+      "Figure_1.png"
+    ]
+  },
+  "plot_figure2.py": {
+    "figure": "Figure 2",
+    "inputs": [
+      "source_data/Figure2a_atlas_reporting_label_composition.tsv",
+      "source_data/Figure2a_atlas_selection_flow.tsv",
+      "source_data/Figure2b_local_group_composition.tsv",
+      "source_data/Figure2c_local_public_type_ani.tsv",
+      "source_data/Figure2d_local_ani_margins.tsv"
+    ],
+    "outputs": [
+      "Figure_2.pdf",
+      "Figure_2.png"
+    ]
+  },
+  "plot_figure3.py": {
+    "figure": "Figure 3",
+    "inputs": [
+      "phylogeny/intracellulare_complex_94.treefile",
+      "source_data/Figure3a_tree_aligned_interval_presence.tsv",
+      "source_data/Figure3b_full_atlas_interval_prevalence.tsv",
+      "source_data/Figure3c_bioproject_stratified_statistics.tsv",
+      "source_data/Figure3d_representative_gene_order.tsv"
+    ],
+    "outputs": [
+      "Figure_3.pdf",
+      "Figure_3.png"
+    ]
+  },
+  "plot_figure4.py": {
+    "figure": "Figure 4",
+    "inputs": [
+      "source_data/Figure4_complete_10_percent_conditions.tsv",
+      "source_data/Figure4_complete_40_conditions.tsv",
+      "source_data/Figure4_source_pair_ani.tsv",
+      "source_data/Figure4_stage1_detection_summary.tsv"
+    ],
+    "outputs": [
+      "Figure_4.pdf",
+      "Figure_4.png"
+    ]
+  },
+  "plot_figure5.py": {
+    "figure": "Figure 5",
+    "inputs": [
+      "source_data/Figure5a_external_annotations.tsv",
+      "source_data/Figure5a_external_family_read_support.tsv",
+      "source_data/Figure5a_external_interval_calls.tsv",
+      "source_data/Figure5a_external_qc.tsv",
+      "source_data/Figure5b_public_sensitivities.tsv",
+      "source_data/Figure5c_flanking_context.tsv"
+    ],
+    "outputs": [
+      "Figure_5.pdf",
+      "Figure_5.png"
+    ]
+  },
+  "plot_supplementary_s1.py": {
+    "figure": "Supplementary Figure S1",
+    "inputs": [
+      "phylogeny/intracellulare_complex_94.treefile",
+      "phylogeny/panel_intracellulare_complex_94.tsv"
+    ],
+    "outputs": [
+      "Supplementary_Figure_S1.pdf",
+      "Supplementary_Figure_S1.png"
+    ]
+  },
+  "plot_supplementary_s2.py": {
+    "figure": "Supplementary Figure S2",
+    "inputs": [
+      "phylogeny/avium_timonense_64.treefile",
+      "phylogeny/colombiense_29.treefile",
+      "phylogeny/panel_avium_timonense_64.tsv",
+      "phylogeny/panel_colombiense_29.tsv"
+    ],
+    "outputs": [
+      "Supplementary_Figure_S2.pdf",
+      "Supplementary_Figure_S2.png"
+    ]
+  }
+}
