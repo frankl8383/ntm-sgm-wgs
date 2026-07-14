@@ -173,7 +173,7 @@ ax_c.legend(handles=leg_c, loc="center left", bbox_to_anchor=(0.0,0.52),
 # ================= (d) separation margins =================
 fs.set_frame(ax_d,"b"); ax_d.spines["left"].set_visible(False)
 fs.panel_letter(ax_d,"d",dx=-0.05,dy=1.05)
-ax_d.set_title("Separation from nearest distinct label", loc="left", x=0.0, pad=6)
+ax_d.set_title("Nearest distinct-label margin", loc="left", x=0.0, pad=6)
 yd = np.arange(len(d2))[::-1]
 NARROW = 0.15
 for i,row in d2.iterrows():

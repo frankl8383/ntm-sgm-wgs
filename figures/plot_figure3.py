@@ -48,9 +48,11 @@ C = {
 
 
 def setup(base=8, mid=7, small=6):
+    preferred_font = os.environ.get("NTM_FIGURE_FONT", "Arial")
+    font_stack = list(dict.fromkeys([preferred_font, "Arial", "Helvetica", "DejaVu Sans"]))
     mpl.rcParams.update({
         "font.family": "sans-serif",
-        "font.sans-serif": ["Arial", "Helvetica", "DejaVu Sans"],
+        "font.sans-serif": font_stack,
         "pdf.fonttype": 42, "ps.fonttype": 42,
         "svg.fonttype": "none",
         "axes.linewidth": 0.6,
@@ -183,9 +185,13 @@ def gene_arrows(ax, y, strands, color, x0=0.0, glyph_w=1.0, gap=0.28, h=0.5,
 
 
 def save(fig, stem, dpi=300):
-    fig.savefig(f"{stem}.pdf", facecolor="white", bbox_inches="tight")
-    fig.savefig(f"{stem}.png", dpi=dpi, facecolor="white", bbox_inches="tight")
-    return f"{stem}.pdf", f"{stem}.png"
+    output_dir = os.environ.get("NTM_FIGURE_OUTPUT_DIR", ".")
+    os.makedirs(output_dir, exist_ok=True)
+    pdf = os.path.join(output_dir, f"{stem}.pdf")
+    png = os.path.join(output_dir, f"{stem}.png")
+    fig.savefig(pdf, facecolor="white", bbox_inches="tight")
+    fig.savefig(png, dpi=dpi, facecolor="white", bbox_inches="tight")
+    return pdf, png
 
 
 # ── load data ───────────────────────────────────────────────────────────────
@@ -343,6 +349,5 @@ for ax in fig.axes:
         ax.set_xticks([])
         ax.set_yticks([])
 
-fig.savefig("Figure_3.pdf", facecolor="white", bbox_inches="tight")
-fig.savefig("Figure_3.png", dpi=300, facecolor="white", bbox_inches="tight")
-print("saved: Figure_3.pdf Figure_3.png")
+pdf3, png3 = save(fig, "Figure_3")
+print("saved:", pdf3, png3)

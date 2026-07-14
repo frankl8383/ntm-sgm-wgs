@@ -147,7 +147,7 @@ def build_fig4(D):
     ax_c.text(2.5, -1.02, "Auxiliary rule", ha="center", va="center", fontsize=6.4, color=C["ink"])
     ax_c.text(1.5, 8.9, "cell = burden \u00f7 threshold;  > 1 = positive", ha="center", va="center",
               fontsize=5.5, color=C["muted"])
-    ax_c.set_title("Complete 10% reconstruction", loc="left", pad=5, fontsize=8)
+    ax_c.set_title("10% reconstruction", loc="left", pad=5, fontsize=8)
     fs.panel_letter(ax_c, "c", dx=-0.46, dy=1.045)
 
     # (d) nested-depth grid

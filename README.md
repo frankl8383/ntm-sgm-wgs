@@ -12,3 +12,5 @@ make figures
 ```
 
 Analysis scripts are in `scripts/`. Figure code and source data are in `figures/`.
+`make figures` checks the Arial output and a DejaVu Sans fallback render.
+`environment.yml` covers the Python scripts, tests and figures. External tools are listed in `WORKFLOW.md`.

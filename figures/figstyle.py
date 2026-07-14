@@ -15,6 +15,7 @@ Usage:
     fs.set_frame(ax, 'lb')           # keep only left+bottom spines
 """
 from __future__ import annotations
+import os
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -81,9 +82,11 @@ DIVERGING = mpl.colors.LinearSegmentedColormap.from_list(
 
 def setup(base=8, mid=7, small=6):
     """Set Arial + a 3-size role ladder + outward ticks + vector-friendly output."""
+    preferred_font = os.environ.get("NTM_FIGURE_FONT", "Arial")
+    font_stack = list(dict.fromkeys([preferred_font, "Arial", "Helvetica", "DejaVu Sans"]))
     mpl.rcParams.update({
         "font.family": "sans-serif",
-        "font.sans-serif": ["Arial", "Helvetica", "DejaVu Sans"],
+        "font.sans-serif": font_stack,
         "pdf.fonttype": 42, "ps.fonttype": 42,          # editable text in vector output
         "svg.fonttype": "none",
         "axes.linewidth": 0.6,
@@ -359,8 +362,12 @@ def qa_report(fig):
 
 def save(fig, stem, dpi=300):
     """Save PDF (vector) + PNG (raster) with the house defaults."""
-    fig.savefig(f"{stem}.pdf", facecolor="white", bbox_inches="tight")
-    fig.savefig(f"{stem}.png", dpi=dpi, facecolor="white", bbox_inches="tight")
-    return f"{stem}.pdf", f"{stem}.png"
+    output_dir = os.environ.get("NTM_FIGURE_OUTPUT_DIR", ".")
+    os.makedirs(output_dir, exist_ok=True)
+    pdf = os.path.join(output_dir, f"{stem}.pdf")
+    png = os.path.join(output_dir, f"{stem}.png")
+    fig.savefig(pdf, facecolor="white", bbox_inches="tight")
+    fig.savefig(png, dpi=dpi, facecolor="white", bbox_inches="tight")
+    return pdf, png
 
 C["intervening"] = "#D9D9D9"

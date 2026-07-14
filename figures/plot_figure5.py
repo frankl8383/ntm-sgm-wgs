@@ -84,6 +84,7 @@ def _panel_a(ax, A, pres, dis, agree, C):
     n = len(A)
     n_tmi = int((A.frozen_expected_lineage == "TMI").sum())
     n_qual = int(A.qual.sum())
+    qc_x = -0.72
     ax.set_xlim(-3.5, 3.6); ax.set_ylim(n + 0.05, -1.55)
     ax.set_xticks([]); ax.set_yticks([])
     for s in ax.spines.values():
@@ -99,7 +100,7 @@ def _panel_a(ax, A, pres, dis, agree, C):
     # column headers
     ax.text(-3.15, -0.72, "Isolate", ha="left", va="center", fontsize=5.6, color=C["muted"])
     ax.text(-1.15, -0.72, "ANI", ha="right", va="center", fontsize=5.6, color=C["muted"])
-    ax.text(-0.62, -0.72, "QC", ha="center", va="center", fontsize=5.6, color=C["muted"])
+    ax.text(qc_x, -0.72, "QC", ha="center", va="center", fontsize=5.6, color=C["muted"])
     for j, b in enumerate(BLOCK_ORDER):
         ax.text(j, -0.80, HDR[b], ha="center", va="center", fontsize=5.7, fontweight="bold",
                 color=C[BLOCK_LINE[b]], linespacing=1.0)
@@ -117,7 +118,7 @@ def _panel_a(ax, A, pres, dis, agree, C):
                 fontsize=5.8, color=C["ink"] if row.qual else C["muted"])
         # QC triangle for external_qc_pass == False
         if not _tf(row.external_qc_pass):
-            ax.scatter(-0.62, i, marker="^", s=26, facecolor=C["warning"], edgecolor="white",
+            ax.scatter(qc_x, i, marker="^", s=26, facecolor=C["warning"], edgecolor="white",
                        linewidth=0.4, zorder=4)
         # presence cells
         for j, b in enumerate(BLOCK_ORDER):
