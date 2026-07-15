@@ -15,5 +15,6 @@ tmp/
 *.xls
 *.docx
 *.pdf
+*.png
 *.html
 *.log

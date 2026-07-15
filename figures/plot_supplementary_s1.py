@@ -88,7 +88,7 @@ ax1.tick_params(axis="x", length=2.6)
 
 fig1.text(0.045, 0.965, "Current public context of the local M. intracellulare complex",
           fontsize=9, fontweight="bold", ha="left", va="bottom")
-fig1.text(0.045, 0.952, "90 of 94 genomes displayed; four distant M. marseillense records omitted for legibility (complete Newick supplied separately)",
+fig1.text(0.045, 0.952, "90 of 94 genomes displayed; four distant M. marseillense records omitted (complete Newick in Supplementary Phylogeny Data)",
           fontsize=6.2, color=fs.C["muted"], ha="left", va="top")
 fs.panel_letter(ax1, "a", dx=-0.006, dy=1.0)
 

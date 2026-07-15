@@ -14,11 +14,11 @@
   "plot_figure2.py": {
     "figure": "Figure 2",
     "inputs": [
-      "source_data/Figure2a_atlas_reporting_label_composition.tsv",
-      "source_data/Figure2a_atlas_selection_flow.tsv",
-      "source_data/Figure2b_local_group_composition.tsv",
-      "source_data/Figure2c_local_public_type_ani.tsv",
-      "source_data/Figure2d_local_ani_margins.tsv"
+      "source_data/Figure2_complete_10_percent_conditions.tsv",
+      "source_data/Figure2_complete_40_conditions.tsv",
+      "source_data/Figure2_source_pair_ani.tsv",
+      "source_data/Figure2_stage1_detection_summary.tsv",
+      "source_data/Figure2_stage1_technical_windows.tsv"
     ],
     "outputs": [
       "Figure_2.pdf",
@@ -28,11 +28,11 @@
   "plot_figure3.py": {
     "figure": "Figure 3",
     "inputs": [
-      "phylogeny/intracellulare_complex_94.treefile",
-      "source_data/Figure3a_tree_aligned_interval_presence.tsv",
-      "source_data/Figure3b_full_atlas_interval_prevalence.tsv",
-      "source_data/Figure3c_bioproject_stratified_statistics.tsv",
-      "source_data/Figure3d_representative_gene_order.tsv"
+      "source_data/Figure3a_atlas_reporting_label_composition.tsv",
+      "source_data/Figure3a_atlas_selection_flow.tsv",
+      "source_data/Figure3b_local_group_composition.tsv",
+      "source_data/Figure3c_local_public_type_ani.tsv",
+      "source_data/Figure3d_local_ani_margins.tsv"
     ],
     "outputs": [
       "Figure_3.pdf",
@@ -42,10 +42,11 @@
   "plot_figure4.py": {
     "figure": "Figure 4",
     "inputs": [
-      "source_data/Figure4_complete_10_percent_conditions.tsv",
-      "source_data/Figure4_complete_40_conditions.tsv",
-      "source_data/Figure4_source_pair_ani.tsv",
-      "source_data/Figure4_stage1_detection_summary.tsv"
+      "phylogeny/intracellulare_complex_94.treefile",
+      "source_data/Figure4a_tree_aligned_interval_presence.tsv",
+      "source_data/Figure4b_full_atlas_interval_prevalence.tsv",
+      "source_data/Figure4c_bioproject_stratified_statistics.tsv",
+      "source_data/Figure4d_representative_gene_order.tsv"
     ],
     "outputs": [
       "Figure_4.pdf",

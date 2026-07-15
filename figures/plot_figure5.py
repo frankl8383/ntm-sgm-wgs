@@ -29,8 +29,8 @@ SHORT = {"TMI_aromatic_catabolism_associated_block": "Aromatic",
          "MP_MIP_oxidoreductase_associated_block": "Oxidoreductase"}
 HDR = {"TMI_aromatic_catabolism_associated_block": "Aromatic",
        "TMI_methyltransferase_hydrolase_cupin_block": "Methyl./\ncupin",
-       "MP_MIP_nitrogen_redox_associated_block": "N-redox",
-       "MP_MIP_oxidoreductase_associated_block": "Oxido-\nreductase"}
+       "MP_MIP_nitrogen_redox_associated_block": "N/\nredox",
+       "MP_MIP_oxidoreductase_associated_block": "Oxido-\nred."}
 BLOCK_LINE = {b: ("tmi" if b.startswith("TMI_") else "mp") for b in BLOCK_ORDER}
 DATASETS = ["Separate public set", "Complete genomes", "One per project", "Near-clone reduced"]
 LINES_B = ["TMI", "MP-MIP"]
@@ -89,20 +89,20 @@ def _panel_a(ax, A, pres, dis, agree, C):
     ax.set_xticks([]); ax.set_yticks([])
     for s in ax.spines.values():
         s.set_visible(False)
-    ax.set_title("External evaluation of 9 PRJNA983112 genomes", loc="left", pad=6, fontsize=8)
+    ax.set_title("External set: 9 displayed; 5 anchor-qualified", loc="left", pad=6, fontsize=8)
 
     # anchor-qualified group band (rows 0..n_qual-1)
     ax.add_patch(Rectangle((-3.42, -0.44), 0.13, n_qual - 1 + 0.88, facecolor=C["recovered"],
                            edgecolor="none", alpha=0.85, zorder=1))
     ax.text(-3.28, (n_qual - 1) / 2.0, "anchor-qualified (\u2265 98.60% ANI)", rotation=90,
-            ha="center", va="center", fontsize=5.6, color=C["recovered"], fontweight="bold")
+            ha="center", va="center", fontsize=6.0, color=C["recovered"], fontweight="bold")
 
     # column headers
-    ax.text(-3.15, -0.72, "Isolate", ha="left", va="center", fontsize=5.6, color=C["muted"])
-    ax.text(-1.15, -0.72, "ANI", ha="right", va="center", fontsize=5.6, color=C["muted"])
-    ax.text(qc_x, -0.72, "QC", ha="center", va="center", fontsize=5.6, color=C["muted"])
+    ax.text(-3.15, -0.72, "Isolate", ha="left", va="center", fontsize=6.0, color=C["muted"])
+    ax.text(-1.15, -0.72, "ANI", ha="right", va="center", fontsize=6.0, color=C["muted"])
+    ax.text(qc_x, -0.72, "QC", ha="center", va="center", fontsize=6.0, color=C["muted"])
     for j, b in enumerate(BLOCK_ORDER):
-        ax.text(j, -0.80, HDR[b], ha="center", va="center", fontsize=5.7, fontweight="bold",
+        ax.text(j, -0.80, HDR[b], ha="center", va="center", fontsize=6.0, fontweight="bold",
                 color=C[BLOCK_LINE[b]], linespacing=1.0)
 
     dis_set = set(dis)
@@ -115,7 +115,7 @@ def _panel_a(ax, A, pres, dis, agree, C):
                 fontweight="bold" if row.qual else "normal",
                 color=C["ink"] if row.qual else C["muted"])
         ax.text(-1.15, i, f"{row.principal_lineage_anchor_max_ani:.1f}", ha="right", va="center",
-                fontsize=5.8, color=C["ink"] if row.qual else C["muted"])
+                fontsize=6.0, color=C["ink"] if row.qual else C["muted"])
         # QC triangle for external_qc_pass == False
         if not _tf(row.external_qc_pass):
             ax.scatter(qc_x, i, marker="^", s=26, facecolor=C["warning"], edgecolor="white",
@@ -132,14 +132,14 @@ def _panel_a(ax, A, pres, dis, agree, C):
     # lineage divider between TMI and MP-MIP (starts right of the rotated anchor label)
     ax.plot([-3.05, 3.5], [n_tmi - 0.5, n_tmi - 0.5], color=C["muted"], lw=0.6, zorder=3)
     ax.text(3.55, (n_tmi - 1) / 2.0, "TMI", rotation=90, ha="center", va="center",
-            fontsize=5.6, color=C["tmi"], fontweight="bold")
+            fontsize=6.0, color=C["tmi"], fontweight="bold")
     ax.text(3.55, (n_tmi + n - 1) / 2.0, "MP-MIP", rotation=90, ha="center", va="center",
-            fontsize=5.6, color=C["mp"], fontweight="bold")
+            fontsize=6.0, color=C["mp"], fontweight="bold")
     # caption
     ax.text(-3.42, n + 0.55,
-            f"Filled = one-contig interval call.  {agree}/family-content agreement.\n"
+            f"Filled = one-contig interval call.  {agree} family-content agreement.\n"
             "\u25b2 QC contig-count warning (mv17).   \u25a1 red = read/assembly disagreement (mv8).",
-            ha="left", va="top", fontsize=5.3, color=C["muted"], linespacing=1.3)
+            ha="left", va="top", fontsize=5.8, color=C["muted"], linespacing=1.3)
 
 
 def _panel_b(ax, B, C):
@@ -147,17 +147,17 @@ def _panel_b(ax, B, C):
     ax.set_xticks([]); ax.set_yticks([])
     for s in ax.spines.values():
         s.set_visible(False)
-    ax.set_title("Interval prevalence across 4 public dataset definitions", loc="left", pad=6,
-                 fontsize=8, x=-0.145)
+    ax.set_title("Interval prevalence across four public sets", loc="left", pad=6,
+                 fontsize=8)
     # block headers spanning T,M sub-cols
     for g, b in enumerate(BLOCK_ORDER):
         xc = 2 * g + 0.5
-        ax.text(xc, -1.28, HDR[b], ha="center", va="center", fontsize=5.7, fontweight="bold",
+        ax.text(xc, -1.28, HDR[b], ha="center", va="center", fontsize=6.0, fontweight="bold",
                 color=C[BLOCK_LINE[b]], linespacing=1.0)
-        ax.text(2 * g, -0.60, "T", ha="center", va="center", fontsize=5.6, color=C["tmi"], fontweight="bold")
-        ax.text(2 * g + 1, -0.60, "M", ha="center", va="center", fontsize=5.6, color=C["mp"], fontweight="bold")
+        ax.text(2 * g, -0.60, "T", ha="center", va="center", fontsize=6.0, color=C["tmi"], fontweight="bold")
+        ax.text(2 * g + 1, -0.60, "M", ha="center", va="center", fontsize=6.0, color=C["mp"], fontweight="bold")
     for r, ds in enumerate(DATASETS):
-        ax.text(-0.7, r, ds, ha="right", va="center", fontsize=5.8, color=C["ink"])
+        ax.text(-0.7, r, ds, ha="right", va="center", fontsize=6.0, color=C["ink"])
         for g, b in enumerate(BLOCK_ORDER):
             for k, lin in enumerate(LINES_B):
                 present, total, prev = B[ds][b][lin]
@@ -166,7 +166,7 @@ def _panel_b(ax, B, C):
                 x = 2 * g + k
                 ax.add_patch(Rectangle((x - 0.47, r - 0.45), 0.94, 0.90, facecolor=fc,
                                        edgecolor="white", linewidth=0.6, zorder=2))
-                ax.text(x, r, f"{present}/{total}", ha="center", va="center", fontsize=4.9,
+                ax.text(x, r, f"{present}/{total}", ha="center", va="center", fontsize=5.3,
                         color="white" if prev >= 0.6 else C["ink"], zorder=4)
     # group separators
     for xb in (1.5, 3.5, 5.5):
@@ -174,7 +174,7 @@ def _panel_b(ax, B, C):
     ax.text(-4.6, len(DATASETS) + 0.05,
             "T = TMI, M = MP-MIP.  Cell = genomes with interval / tested;\n"
             "fill depth tracks prevalence. Lineage-specific pattern holds\nacross all four dataset definitions.",
-            ha="left", va="top", fontsize=5.3, color=C["muted"], linespacing=1.3)
+            ha="left", va="top", fontsize=5.8, color=C["muted"], linespacing=1.3)
 
 
 def _panel_c(ax, ctx_count, C):
@@ -193,7 +193,7 @@ def _panel_c(ax, ctx_count, C):
     ax.set_xticks([0, 10, 20]); ax.set_xlabel("Complete genomes", fontsize=7)
     fs.set_frame(ax, "b")
     ax.spines["bottom"].set_bounds(0, 26)
-    ax.set_title("Flanking context at two candidate loci (complete assemblies)", loc="left",
+    ax.set_title("Flanking context in complete assemblies", loc="left",
                  pad=6, fontsize=8)
     hh = 0.30
     for lab, blk, lin, pcol, tcol, y in rows:
