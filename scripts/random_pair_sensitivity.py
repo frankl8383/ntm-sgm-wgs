@@ -17,6 +17,7 @@ import os
 import random
 import shutil
 import subprocess
+import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
@@ -30,16 +31,36 @@ PAIR_DEFINITIONS = {
     "pairC": ("Mi23", "Mi8", "held_back_within_mp_mip"),
     "pairD": ("Mi25", "Mi4", "held_back_within_mp_mip"),
 }
+EXPECTED_PURE_CONTROLS_PER_PAIR = 6
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--project-root", type=Path, default=Path.cwd())
     parser.add_argument("--workers", type=int, default=2)
     parser.add_argument("--threads-per-worker", type=int, default=4)
+    parser.add_argument("--tool-dir", type=Path)
     parser.add_argument("--force", action="store_true")
     parser.add_argument("--keep-pools", action="store_true")
     return parser.parse_args()
+
+
+def executable(tool_dir: Path | None, name: str) -> str:
+    if tool_dir is not None:
+        candidate = tool_dir / name
+        if candidate.exists():
+            return str(candidate)
+    resolved = shutil.which(name)
+    if resolved is None:
+        raise FileNotFoundError(f"Required executable not found: {name}")
+    return resolved
+
+
+def workflow_paths(project: Path) -> tuple[Path, Path]:
+    results = project / "results"
+    stage1 = results / "near_mac_dilution" / "stage1_clean_reference"
+    outdir = results / "near_mac_random_pair_sensitivity"
+    return stage1, outdir
 
 
 def stable_seed(label: str) -> int:
@@ -317,7 +338,11 @@ def write_mixture(
 
 
 def build_indexes(
-    project: Path, samples: set[str], stage1: Path, tool_env: Path, threads: int
+    project: Path,
+    samples: set[str],
+    stage1: Path,
+    tool_env: Path | None,
+    threads: int,
 ) -> tuple[dict[str, Path], dict[str, Path]]:
     assemblies: dict[str, Path] = {}
     indexes: dict[str, Path] = {}
@@ -330,7 +355,7 @@ def build_indexes(
             index.parent.mkdir(parents=True, exist_ok=True)
             subprocess.run(
                 [
-                    str(tool_env / "bowtie2-build"),
+                    executable(tool_env, "bowtie2-build"),
                     "--threads",
                     str(threads),
                     str(assembly),
@@ -342,7 +367,7 @@ def build_indexes(
             )
         if not Path(f"{assembly}.fai").exists():
             subprocess.run(
-                [str(tool_env / "samtools"), "faidx", str(assembly)], check=True
+                [executable(tool_env, "samtools"), "faidx", str(assembly)], check=True
             )
     return assemblies, indexes
 
@@ -354,7 +379,7 @@ def run_condition(
     indexes: dict[str, Path],
     outdir: Path,
     script_dir: Path,
-    tool_env: Path,
+    tool_env: Path | None,
     threads: int,
     force: bool,
 ) -> Path:
@@ -388,12 +413,15 @@ def run_condition(
     logs = sample_out / "logs"
     logs.mkdir(exist_ok=True)
     bam = sample_out / f"{condition_id}.sorted.bam"
+    bowtie2 = executable(tool_env, "bowtie2")
+    samtools = executable(tool_env, "samtools")
     env = os.environ.copy()
-    env["PATH"] = f"{tool_env}:{env.get('PATH', '')}"
+    if tool_env is not None:
+        env["PATH"] = f"{tool_env}:{env.get('PATH', '')}"
     with (logs / "bowtie2.log").open("w") as err:
         align = subprocess.Popen(
             [
-                str(tool_env / "bowtie2"),
+                bowtie2,
                 "--very-sensitive",
                 "--no-unal",
                 "-p",
@@ -411,7 +439,7 @@ def run_condition(
         )
         assert align.stdout is not None
         sort = subprocess.run(
-            [str(tool_env / "samtools"), "sort", "-@", "2", "-o", str(bam), "-"],
+            [samtools, "sort", "-@", "2", "-o", str(bam), "-"],
             stdin=align.stdout,
             check=True,
             env=env,
@@ -423,7 +451,7 @@ def run_condition(
     with (logs / "mpileup.log").open("w") as err:
         pileup = subprocess.Popen(
             [
-                str(tool_env / "samtools"),
+                samtools,
                 "mpileup",
                 "-aa",
                 "-q",
@@ -443,8 +471,8 @@ def run_condition(
         assert pileup.stdout is not None
         summarize = subprocess.run(
             [
-                str(tool_env / "python"),
-                str(script_dir / "31_summarize_pileup_mixture.py"),
+                sys.executable,
+                str(script_dir / "residual_mixture.py"),
                 "--sample",
                 condition_id,
                 "--route",
@@ -472,27 +500,47 @@ def read_row(path: Path) -> dict[str, str]:
 
 
 def secondary_threshold(stage1: Path) -> float:
-    metrics = stage1 / "summary_analysis" / "nearmac_dilution_condition_metrics.tsv"
-    with metrics.open(newline="") as handle:
-        values = {
-            round(float(row["secondary_10_90_threshold"]), 9)
-            for row in csv.DictReader(handle, delimiter="\t")
-        }
-    if len(values) != 1:
-        raise ValueError(f"Expected one frozen auxiliary threshold, found {values}")
-    return values.pop()
+    pure_controls: list[tuple[str, float]] = []
+    for path in sorted(
+        stage1.glob(
+            "conditions/pair[AB]__*_major__*_minor__p00__s*"
+            "/*.minor_allele_burden.tsv"
+        )
+    ):
+        pair_id = path.parent.name.split("__", 1)[0]
+        row = read_row(path)
+        callable_positions = int(row["callable_positions_depth_ge_20"])
+        if callable_positions == 0:
+            raise ValueError(f"No callable positions in {path}")
+        burden = (
+            int(row["mixed_sites_maf_0.10_0.90"])
+            * 1_000_000
+            / callable_positions
+        )
+        pure_controls.append((pair_id, burden))
+    counts = {
+        pair_id: sum(row_pair == pair_id for row_pair, _ in pure_controls)
+        for pair_id in ("pairA", "pairB")
+    }
+    if any(
+        count != EXPECTED_PURE_CONTROLS_PER_PAIR
+        for count in counts.values()
+    ):
+        raise ValueError(
+            "Expected six pairA and six pairB pure controls to freeze the "
+            f"auxiliary threshold; found {counts}"
+        )
+    return 5 * max(burden for _, burden in pure_controls)
 
 
 def main() -> None:
     args = parse_args()
     project = args.project_root.resolve()
-    analysis = project / "analysis_global_mac_upgrade"
-    stage1 = analysis / "results" / "20_nearmac_dilution" / "stage1_clean_reference"
-    outdir = analysis / "results" / "35_nearmac_random_pair_sensitivity"
+    stage1, outdir = workflow_paths(project)
     cache = stage1 / "seeded_windows"
     pool_dir = outdir / "random_union_pools"
-    tool_env = Path("/opt/miniconda3/envs/bioinfo_env/bin")
-    script_dir = analysis / "scripts"
+    tool_env = args.tool_dir.resolve() if args.tool_dir else None
+    script_dir = Path(__file__).resolve().parent
     outdir.mkdir(parents=True, exist_ok=True)
 
     samples = {

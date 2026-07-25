@@ -5,7 +5,7 @@ The main analysis stages are:
 1. Build the public atlas with `scripts/build_atlas.py`.
 2. Run strict and meta recovery with `scripts/run_recovery.sh`.
 3. Summarize recovery gates with `scripts/summarize_recovery.py` and `scripts/build_cohort.py`; evaluate threshold multipliers with `scripts/threshold_sensitivity.py`.
-4. Evaluate near-MAC mixtures with `scripts/near_mac_dilution.py`, `scripts/near_mac_two_route.py` and `scripts/random_pair_sensitivity.py`.
+4. Evaluate near-MAC mixtures with `scripts/near_mac_dilution.py --pairs all`, `scripts/near_mac_two_route.py` and `scripts/random_pair_sensitivity.py`.
 5. Summarize the frozen trees with `scripts/summarize_phylogeny.py`.
 6. Build and test accessory families and intervals with `scripts/accessory_families.py`, `scripts/define_blocks.py` and `scripts/validate_blocks.py`.
 7. Regenerate the figures with `make figures`.
