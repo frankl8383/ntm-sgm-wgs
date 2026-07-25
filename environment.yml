@@ -4,10 +4,8 @@ channels:
 dependencies:
   - python=3.10
   - biopython=1.87
-  - matplotlib=3.10.6
   - numpy
   - pandas
-  - pillow
   - scipy
   - statsmodels
   - pytest
