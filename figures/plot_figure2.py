@@ -16,7 +16,7 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import pandas as pd
-from matplotlib.patches import Patch
+from matplotlib.patches import Patch, Rectangle
 import figstyle as fs
 
 PAIR_ORDER = ["pairA", "pairB", "pairC", "pairD"]
@@ -33,6 +33,20 @@ def _classify(r):
     if _truth(r["either_route_auxiliary_positive"]):
         return 1
     return 0
+
+def _recovery_qc_pass(r):
+    return (
+        r["strict_contigs"] <= 500
+        and r["meta_contigs"] <= 500
+        and r["strict_n50_bp"] >= 20_000
+        and r["meta_n50_bp"] >= 20_000
+        and 60 <= r["strict_gc_percent"] <= 72
+        and 60 <= r["meta_gc_percent"] <= 72
+        and r["meta_to_strict_ani"] >= 99
+        and r["strict_to_meta_ani"] >= 99
+        and r["meta_to_strict_af"] >= 0.85
+        and r["strict_to_meta_af"] >= 0.85
+    )
 
 def load_fig4_data():
     ani = pd.read_csv("source_data/Figure2_source_pair_ani.tsv", sep="\t")
@@ -56,13 +70,23 @@ def load_fig4_data():
           .sort_values(["pr", "dr", "minor_percent"]).reset_index(drop=True))
     depths = [1_000_000, 2_000_000, 4_000_000]
     dmat = np.full((len(rk), 3), np.nan)
+    qcmat = np.ones((len(rk), 3), dtype=bool)
     for i, k in rk.iterrows():
         ss = seld[(seld.pair_id == k.pair_id) & (seld.major == k.major) & (seld.minor == k.minor)
                   & (seld.minor_percent == k.minor_percent)].set_index("total_pairs")
         for j, dp in enumerate(depths):
             dmat[i, j] = _classify(ss.loc[dp])
+            qcmat[i, j] = _recovery_qc_pass(ss.loc[dp])
     d_rowlabels = [f"{k.pair_id[-1]}  {k.major} + {int(k.minor_percent)}% {k.minor}" for k in rk.itertuples()]
-    return dict(ani=ani, s1=s1, ratios=ratios, c_rowlabels=c_rowlabels, dmat=dmat, d_rowlabels=d_rowlabels)
+    return dict(
+        ani=ani,
+        s1=s1,
+        ratios=ratios,
+        c_rowlabels=c_rowlabels,
+        dmat=dmat,
+        qcmat=qcmat,
+        d_rowlabels=d_rowlabels,
+    )
 
 def _bounded_grid(ax, ncols, nrows, lw=1.0, color="white"):
     for j in range(1, ncols):
@@ -74,7 +98,7 @@ def build_fig4(D):
     C, MM, COLW = fs.C, fs.MM, fs.COLW
     ani, s1 = D["ani"], D["s1"]
     ratios, c_rowlabels = D["ratios"], D["c_rowlabels"]
-    dmat, d_rowlabels = D["dmat"], D["d_rowlabels"]
+    dmat, qcmat, d_rowlabels = D["dmat"], D["qcmat"], D["d_rowlabels"]
     fs.setup()
     fig = plt.figure(figsize=(COLW * MM, 145 * MM), facecolor="white")
     ax_a = fig.add_axes([0.105, 0.615, 0.185, 0.300])
@@ -119,8 +143,7 @@ def build_fig4(D):
                   color=C["primary"], ha="left", va="center",
                   arrowprops=dict(arrowstyle="-", color=C["primary"], lw=0.6))
     ax_b.legend(loc="lower right", fontsize=5.9, handlelength=1.6, borderaxespad=0.5)
-    ax_b.text(0.0, -0.235, "144 windows are dependent (mean overlap 58.4%, max 97.0%):\n"
-              "technical windows, not independent replicates",
+    ax_b.text(0.0, -0.235, "Dependent technical windows\n(mean overlap 58.4%; maximum 97.0%)",
               transform=ax_b.transAxes, ha="left", va="top", fontsize=5.6, color=C["muted"], linespacing=1.25)
     fs.panel_letter(ax_b, "b", dx=-0.22, dy=1.02)
 
@@ -162,6 +185,18 @@ def build_fig4(D):
             st = int(dmat[i, j])
             ax_d.text(j, i, sym[st], ha="center", va="center", fontsize=6.6, fontweight="bold",
                       color="white" if st == 2 else C["ink"])
+            if not qcmat[i, j]:
+                ax_d.add_patch(
+                    Rectangle(
+                        (j - 0.45, i - 0.45),
+                        0.90,
+                        0.90,
+                        facecolor="none",
+                        edgecolor=C["alarm"],
+                        linewidth=1.25,
+                        zorder=6,
+                    )
+                )
     _bounded_grid(ax_d, 3, 12, lw=1.0)
     for hb in (2.5, 5.5, 8.5):
         ax_d.plot([-0.5, 2.5], [hb, hb], color="white", lw=2.2, zorder=4)
@@ -170,13 +205,14 @@ def build_fig4(D):
         s.set_visible(False)
     ax_d.set_ylim(11.5, -0.5); ax_d.set_xlim(-0.5, 2.5)
     ax_d.set_title("Nested-depth sensitivity of the complete two-route rule", loc="left", pad=5, fontsize=8)
-    leg = [Patch(facecolor=C["primary"], label="P  primary positive"),
-           Patch(facecolor=C["auxiliary"], label="A  auxiliary-only positive"),
-           Patch(facecolor=C["negative"], label="\u2013  neither rule positive")]
+    leg = [Patch(facecolor=C["primary"], label="P  primary"),
+           Patch(facecolor=C["auxiliary"], label="A  auxiliary only"),
+           Patch(facecolor=C["negative"], label="\u2013  negative"),
+           Patch(facecolor="none", edgecolor=C["alarm"], linewidth=1.25,
+                 label="outline  recovery QC failed")]
     ax_d.legend(handles=leg, loc="upper center", bbox_to_anchor=(0.5, -0.075),
-                ncol=3, fontsize=6.2, handlelength=1.1, columnspacing=1.8, handletextpad=0.5)
-    ax_d.text(0.5, -0.175, "Depth tiers are nested prefixes of one seeded window (not independent);\n"
-              "they define the tested operating range, not a universal limit.",
+                ncol=4, fontsize=5.9, handlelength=1.1, columnspacing=1.3, handletextpad=0.5)
+    ax_d.text(0.5, -0.165, "Depth tiers are nested prefixes of one seeded window.",
               transform=ax_d.transAxes, ha="center", va="top", fontsize=5.6, color=C["muted"], linespacing=1.25)
     fs.panel_letter(ax_d, "d", dx=-0.135, dy=1.02)
     return fig

@@ -22,6 +22,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import FancyArrowPatch, Rectangle, FancyBboxPatch, PathPatch
 from matplotlib.path import Path
 from matplotlib.lines import Line2D
+from PIL import Image
 
 MM = 1.0 / 25.4          # millimetres -> inches
 COLW = 183.0             # MGen double-column width in mm
@@ -361,13 +362,24 @@ def qa_report(fig):
     return probs
 
 def save(fig, stem, dpi=300):
-    """Save PDF (vector) + PNG (raster) with the house defaults."""
+    """Save vector PDF, review PNG and submission-grade 600 dpi TIFF."""
     output_dir = os.environ.get("NTM_FIGURE_OUTPUT_DIR", ".")
     os.makedirs(output_dir, exist_ok=True)
     pdf = os.path.join(output_dir, f"{stem}.pdf")
     png = os.path.join(output_dir, f"{stem}.png")
+    tiff = os.path.join(output_dir, f"{stem}.tiff")
     fig.savefig(pdf, facecolor="white", bbox_inches="tight")
     fig.savefig(png, dpi=dpi, facecolor="white", bbox_inches="tight")
+    fig.savefig(
+        tiff,
+        dpi=600,
+        facecolor="white",
+        bbox_inches="tight",
+        pil_kwargs={"compression": "tiff_lzw"},
+    )
+    with Image.open(tiff) as raster:
+        rgb = raster.convert("RGB")
+    rgb.save(tiff, compression="tiff_lzw", dpi=(600, 600))
     return pdf, png
 
 C["intervening"] = "#D9D9D9"
