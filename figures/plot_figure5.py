@@ -92,10 +92,8 @@ def _panel_a(ax, A, pres, dis, agree, C):
     ax.set_title("External set: 9 displayed; 5 anchor-qualified", loc="left", pad=6, fontsize=8)
 
     # anchor-qualified group band (rows 0..n_qual-1)
-    ax.add_patch(Rectangle((-3.42, -0.44), 0.13, n_qual - 1 + 0.88, facecolor=C["recovered"],
+    ax.add_patch(Rectangle((-3.42, -0.44), 0.06, n_qual - 1 + 0.88, facecolor=C["recovered"],
                            edgecolor="none", alpha=0.85, zorder=1))
-    ax.text(-3.28, (n_qual - 1) / 2.0, "anchor-qualified (\u2265 98.60% ANI)", rotation=90,
-            ha="center", va="center", fontsize=6.0, color=C["recovered"], fontweight="bold")
 
     # column headers
     ax.text(-3.15, -0.72, "Isolate", ha="left", va="center", fontsize=6.0, color=C["muted"])
@@ -129,7 +127,7 @@ def _panel_a(ax, A, pres, dis, agree, C):
             if (sid, b) in dis_set:
                 ax.add_patch(Rectangle((j - 0.46, i - 0.44), 0.92, 0.88, facecolor="none",
                                        edgecolor=C["alarm"], linewidth=1.4, zorder=5))
-    # lineage divider between TMI and MP-MIP (starts right of the rotated anchor label)
+    # lineage divider between TMI and MP-MIP
     ax.plot([-3.05, 3.5], [n_tmi - 0.5, n_tmi - 0.5], color=C["muted"], lw=0.6, zorder=3)
     ax.text(3.55, (n_tmi - 1) / 2.0, "TMI", rotation=90, ha="center", va="center",
             fontsize=6.0, color=C["tmi"], fontweight="bold")
@@ -137,8 +135,9 @@ def _panel_a(ax, A, pres, dis, agree, C):
             fontsize=6.0, color=C["mp"], fontweight="bold")
     # caption
     ax.text(-3.42, n + 0.55,
-            f"Filled = one-contig interval call.  {agree} family-content agreement.\n"
-            "\u25b2 QC contig-count warning (mv17).   \u25a1 red = read/assembly disagreement (mv8).",
+            f"Left band = anchor-qualified (\u226598.60% ANI).  Filled = one-contig interval call.\n"
+            f"{agree} family-content agreement.  "
+            "\u25b2 QC contig-count warning (mv17).   Red outline = read/assembly disagreement (mv8).",
             ha="left", va="top", fontsize=5.8, color=C["muted"], linespacing=1.3)
 
 
@@ -173,7 +172,7 @@ def _panel_b(ax, B, C):
         ax.plot([xb, xb], [-0.5, len(DATASETS) - 0.5], color="white", lw=1.8, zorder=3)
     ax.text(-4.6, len(DATASETS) + 0.05,
             "T = TMI, M = MP-MIP.  Cell = genomes with interval / tested;\n"
-            "fill depth tracks prevalence. Lineage-specific pattern holds\nacross all four dataset definitions.",
+            "fill depth tracks prevalence.",
             ha="left", va="top", fontsize=5.8, color=C["muted"], linespacing=1.3)
 
 

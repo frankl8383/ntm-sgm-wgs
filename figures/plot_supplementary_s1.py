@@ -103,7 +103,7 @@ handles = [
 leg = ax1.legend(handles=handles, loc="upper left", bbox_to_anchor=(0.02, 0.985),
                  frameon=False, handletextpad=0.5, labelspacing=0.55, fontsize=6.4,
                  borderaxespad=0.0)
-ax1.text(0.02, 0.72, r"$^{\mathregular{R}}$ recovered local genome (rescued from mixed/failed assembly)",
+ax1.text(0.02, 0.72, r"$^{\mathregular{R}}$ recovered by the two-route procedure",
          transform=ax1.transAxes, fontsize=6.2, color=fs.C["ink"], va="top", ha="left")
 
 ax1.set_xticks(np.arange(0, 0.26, 0.05))
@@ -119,7 +119,7 @@ ax1.annotate("rooting anchor", (x1[anchor_tip], y1[anchor_tip]),
              xytext=(x1[anchor_tip]+maxx1*0.014, y1[anchor_tip]),
              fontsize=5.5, color=fs.C["muted"], va="center", ha="left", style="italic", clip_on=False)
 place_local_labels(ax1, st1["local_pos"], maxx1, dx=0.028, fs_=5.8, min_gap=1.45)
-ax1.text(0.02, 0.72, r"$^{\mathregular{R}}$ recovered local genome (rescued from mixed/failed assembly)",
+ax1.text(0.02, 0.72, r"$^{\mathregular{R}}$ recovered by the two-route procedure",
          transform=ax1.transAxes, fontsize=6.2, color=fs.C["ink"], va="top", ha="left")
 ax1.set_xlim(-maxx1*0.012, maxx1*1.16)
 ax1.set_xticks(np.arange(0,0.26,0.05))
