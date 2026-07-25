@@ -2,7 +2,7 @@
 
 Code for MAC genome recovery, residual-mixture screening and lineage analysis.
 
-Current release: `v2.6.0`.
+Current release: `v2.6.1`.
 
 Reads: NCBI BioProject `PRJNA1444780`; SRA study `SRP687912`.
 
