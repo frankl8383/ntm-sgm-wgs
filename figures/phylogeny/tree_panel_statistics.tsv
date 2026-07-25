@@ -1,4 +1,0 @@
-panel	n_genomes	n_local	n_public	n_added_anchors	snp_alignment_sites	missing_or_gap_cells	model	ultrafast_bootstrap_replicates
-intracellulare_complex_context	94	17	76	1	13594	0	GTR+F+ASC	1000
-avium_timonense_context	64	3	60	1	8921	0	GTR+F+ASC	1000
-colombiense_context	29	1	27	1	851	0	GTR+F+ASC	1000
